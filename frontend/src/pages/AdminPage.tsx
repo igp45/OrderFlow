@@ -166,7 +166,7 @@ export default function AdminPage() {
 
               {predictError && (
                 <p className="text-sm text-red-500 bg-red-50 rounded-xl p-3">
-                  Prediction failed. Make sure your Gemini API key is set in the backend .env.
+                  Prediction failed. This is usually a Gemini free-tier quota limit — try again in a few minutes or tomorrow when the daily quota resets.
                 </p>
               )}
 
