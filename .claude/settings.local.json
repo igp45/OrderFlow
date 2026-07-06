@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p backend)",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(npx prisma *)",
+      "Bash(npx tsc *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(npx ts-node *)",
+      "Bash(curl -s http://localhost:3001/health)",
+      "Bash(curl -s http://localhost:3001/menu)",
+      "Bash(kill %1)",
+      "Bash(lsof -ti:3001)",
+      "Bash(xargs kill -9)",
+      "Bash(node_modules/.bin/ts-node --project tsconfig.json src/server.ts)",
+      "Bash(npm create *)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(/Users/mac/Desktop/OrderFlow/frontend/node_modules/.bin/tsc --noEmit)",
+      "Bash(/Users/mac/Desktop/OrderFlow/frontend/node_modules/.bin/tsc -p /Users/mac/Desktop/OrderFlow/frontend/tsconfig.app.json --noEmit)",
+      "Bash(lsof -ti:5173)",
+      "Bash(python3 -c \"import sys,json; items=json.load\\(sys.stdin\\); print\\(f'Backend OK — {len\\(items\\)} menu items'\\)\")",
+      "Bash(node_modules/.bin/vite --port 5173)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "Bash(sleep 3 && cat /tmp/frontend.log)",
+      "Read(//private/tmp/**)",
+      "Bash(screencapture -x /tmp/orderflow-menu.png)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl -s http://localhost:5173/menu)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('Backend:', d['status']\\)\")",
+      "Bash(curl -s -o /dev/null -w \"Frontend: HTTP %{http_code}\\\\n\" http://localhost:5173)",
+      "Bash(python3 -c ' *)",
+      "Bash(open http://localhost:5173/kitchen)",
+      "Bash(open http://localhost:5173/admin)",
+      "Bash(curl -s -X POST http://localhost:3001/ai/predict -H \"Content-Type: application/json\")",
+      "Bash(cat /tmp/backend.log | grep -A 5 \"Error\\\\|error\")"
+    ]
+  }
+}
