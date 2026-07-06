@@ -161,7 +161,7 @@ export default function AdminPage() {
                 </button>
               </div>
               <p className="text-xs text-gray-400 mb-5">
-                Powered by Gemini · Based on today's order history
+                Powered by Groq · Based on today's order history
               </p>
 
               {predictError && (
