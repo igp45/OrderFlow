@@ -5,6 +5,11 @@ const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/' });
 
 export const menuApi = {
   getAll: () => api.get<MenuItem[]>('/menu').then(r => r.data),
+  create: (data: Omit<MenuItem, 'id' | 'createdAt' | 'updatedAt'>) =>
+    api.post<MenuItem>('/menu', data).then(r => r.data),
+  update: (id: string, data: Partial<MenuItem>) =>
+    api.patch<MenuItem>(`/menu/${id}`, data).then(r => r.data),
+  delete: (id: string) => api.delete(`/menu/${id}`),
 };
 
 export const ordersApi = {

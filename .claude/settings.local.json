@@ -33,7 +33,14 @@
       "Bash(open http://localhost:5173/kitchen)",
       "Bash(open http://localhost:5173/admin)",
       "Bash(curl -s -X POST http://localhost:3001/ai/predict -H \"Content-Type: application/json\")",
-      "Bash(cat /tmp/backend.log | grep -A 5 \"Error\\\\|error\")"
+      "Bash(cat /tmp/backend.log | grep -A 5 \"Error\\\\|error\")",
+      "Bash(git config *)",
+      "Bash(git commit -m ' *)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(git push *)",
+      "Bash(git add *)",
+      "Bash(curl -s https://orderflow-4wte.onrender.com/health)"
     ]
   }
 }

@@ -1,77 +1,82 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { ordersApi } from '../lib/api';
 import socket from '../lib/socket';
+import DarkModeToggle from '../components/DarkModeToggle';
 import type { Order, OrderStatus } from '../types';
 
-const STATUS_FLOW: Record<OrderStatus, OrderStatus | null> = {
-  PENDING:   'PREPARING',
-  PREPARING: 'READY',
-  READY:     'COMPLETED',
-  COMPLETED: null,
+const ACTIVE: OrderStatus[] = ['PENDING', 'PREPARING', 'READY'];
+
+const COL_META = {
+  PENDING:   { label: 'New Orders',  dot: '#F59E0B', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)',  next: 'Start Preparing', nextColor: '#F59E0B' },
+  PREPARING: { label: 'Preparing',   dot: '#3B82F6', bg: 'rgba(59,130,246,0.08)',  border: 'rgba(59,130,246,0.2)',  next: 'Mark Ready',      nextColor: '#3B82F6' },
+  READY:     { label: 'Ready',       dot: '#10B981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)',  next: 'Complete',        nextColor: '#10B981' },
 };
 
-const STATUS_META: Record<OrderStatus, { label: string; color: string; bg: string; border: string }> = {
-  PENDING:   { label: 'Pending',   color: 'text-yellow-700', bg: 'bg-yellow-50',  border: 'border-yellow-200' },
-  PREPARING: { label: 'Preparing', color: 'text-blue-700',   bg: 'bg-blue-50',    border: 'border-blue-200' },
-  READY:     { label: 'Ready',     color: 'text-green-700',  bg: 'bg-green-50',   border: 'border-green-200' },
-  COMPLETED: { label: 'Completed', color: 'text-gray-500',   bg: 'bg-gray-50',    border: 'border-gray-200' },
-};
+function playAlert() {
+  try {
+    const ctx = new AudioContext();
+    [880, 1100, 880].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.25, ctx.currentTime + i * 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.12);
+      osc.start(ctx.currentTime + i * 0.15);
+      osc.stop(ctx.currentTime + i * 0.15 + 0.12);
+    });
+  } catch { /* AudioContext blocked — user hasn't interacted yet */ }
+}
 
-const NEXT_LABEL: Record<OrderStatus, string> = {
-  PENDING:   'Start Preparing',
-  PREPARING: 'Mark Ready',
-  READY:     'Complete Order',
-  COMPLETED: '',
-};
-
-const ACTIVE_STATUSES: OrderStatus[] = ['PENDING', 'PREPARING', 'READY'];
-
-function OrderCard({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id: string, status: OrderStatus) => void }) {
-  const meta = STATUS_META[order.status];
-  const nextStatus = STATUS_FLOW[order.status];
+function OrderCard({ order, onAdvance }: { order: Order; onAdvance: () => void }) {
+  const meta = COL_META[order.status as keyof typeof COL_META];
   const elapsed = Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60000);
+  const isUrgent = order.status === 'PENDING' && elapsed >= 5;
 
   return (
-    <div className={`rounded-2xl border-2 ${meta.border} ${meta.bg} p-4 flex flex-col gap-3`}>
-      {/* Header */}
+    <div className="rounded-2xl p-4 flex flex-col gap-3 transition-all duration-200"
+      style={{ background: meta.bg, border: `1.5px solid ${isUrgent ? '#EF4444' : meta.border}`, boxShadow: isUrgent ? '0 0 0 2px rgba(239,68,68,0.2)' : 'none' }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-2xl font-black text-gray-900">#{order.orderNumber}</span>
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${meta.color} bg-white border ${meta.border}`}>
-            {meta.label}
-          </span>
+          <span className="text-2xl font-black" style={{ color: '#fff' }}>#{order.orderNumber}</span>
+          {isUrgent && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse">URGENT</span>}
         </div>
-        <span className="text-xs text-gray-400">{elapsed}m ago</span>
+        <span className="text-xs font-medium px-2 py-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)', color: '#9CA3AF' }}>
+          {elapsed}m ago
+        </span>
       </div>
 
-      {/* Items */}
-      <ul className="space-y-1">
+      <ul className="space-y-1.5">
         {order.items.map(item => (
-          <li key={item.id} className="flex items-center justify-between text-sm">
-            <span className="font-medium text-gray-800">
-              <span className="text-orange-500 font-bold">×{item.quantity}</span>{' '}
-              {item.menuItem.name}
+          <li key={item.id} className="flex justify-between items-center text-sm">
+            <span className="font-semibold" style={{ color: '#E5E7EB' }}>
+              <span className="font-black" style={{ color: meta.dot }}>×{item.quantity}</span> {item.menuItem.name}
             </span>
-            <span className="text-gray-400 text-xs">{item.menuItem.category}</span>
+            <span className="text-xs" style={{ color: '#6B7280' }}>{item.menuItem.category}</span>
           </li>
         ))}
       </ul>
 
-      {/* Notes */}
       {order.notes && (
-        <p className="text-xs text-gray-500 bg-white rounded-lg px-3 py-2 border border-gray-100 italic">
+        <p className="text-xs italic rounded-xl px-3 py-2" style={{ background: 'rgba(255,255,255,0.06)', color: '#9CA3AF' }}>
           📝 {order.notes}
         </p>
       )}
 
-      {/* Action */}
-      {nextStatus && (
-        <button
-          onClick={() => onStatusUpdate(order.id, nextStatus)}
-          className="mt-1 w-full py-2.5 rounded-xl text-sm font-bold text-white bg-gray-900 hover:bg-gray-700 transition-colors"
-        >
-          {NEXT_LABEL[order.status]}
+      {order.status !== 'READY' ? (
+        <button onClick={onAdvance}
+          className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95"
+          style={{ background: meta.nextColor, color: '#fff' }}>
+          {meta.next} →
+        </button>
+      ) : (
+        <button onClick={onAdvance}
+          className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95"
+          style={{ background: 'linear-gradient(135deg,#10B981,#059669)', color: '#fff' }}>
+          ✓ Complete Order
         </button>
       )}
     </div>
@@ -80,129 +85,111 @@ function OrderCard({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (i
 
 export default function KitchenPage() {
   const queryClient = useQueryClient();
-  const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const audioUnlocked = useRef(false);
 
-  // Load all active orders on mount
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: orders = [] } = useQuery<Order[]>({
     queryKey: ['kitchen-orders'],
-    queryFn: async () => {
-      // We don't have a GET /orders endpoint for all orders, so we track via socket
-      // and seed from a dashboard call. Kitchen starts fresh each session.
-      return [] as Order[];
-    },
+    queryFn: () => [] as Order[],
   });
 
-  const { mutate: updateStatus } = useMutation({
+  const { mutate: advance } = useMutation({
     mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
       ordersApi.updateStatus(id, status),
     onSuccess: updated => {
       queryClient.setQueryData<Order[]>(['kitchen-orders'], prev =>
-        (prev ?? []).map(o => (o.id === updated.id ? updated : o))
-          .filter(o => ACTIVE_STATUSES.includes(o.status))
+        (prev ?? []).map(o => o.id === updated.id ? updated : o).filter(o => ACTIVE.includes(o.status))
       );
+      const labels: Record<string, string> = { PREPARING: 'Started preparing', READY: 'Marked as ready 🔔', COMPLETED: 'Order completed ✓' };
+      toast.success(labels[updated.status] || 'Status updated');
     },
   });
+
+  const NEXT_STATUS: Record<string, OrderStatus> = { PENDING: 'PREPARING', PREPARING: 'READY', READY: 'COMPLETED' };
 
   useEffect(() => {
     const handleNew = (order: Order) => {
       queryClient.setQueryData<Order[]>(['kitchen-orders'], prev => {
-        const exists = (prev ?? []).some(o => o.id === order.id);
-        return exists ? prev! : [order, ...(prev ?? [])];
+        if ((prev ?? []).some(o => o.id === order.id)) return prev!;
+        return [order, ...(prev ?? [])];
       });
-      setNewOrderIds(prev => new Set(prev).add(order.id));
-      setTimeout(() => {
-        setNewOrderIds(prev => { const s = new Set(prev); s.delete(order.id); return s; });
-      }, 3000);
+      if (audioUnlocked.current) playAlert();
+      setNewIds(prev => new Set(prev).add(order.id));
+      setTimeout(() => setNewIds(prev => { const s = new Set(prev); s.delete(order.id); return s; }), 4000);
+      toast('🆕 New order arrived!', { icon: '🔔', style: { background: '#F59E0B', color: '#fff' } });
     };
-
     const handleUpdated = (order: Order) => {
       queryClient.setQueryData<Order[]>(['kitchen-orders'], prev =>
-        (prev ?? []).map(o => (o.id === order.id ? order : o))
-          .filter(o => ACTIVE_STATUSES.includes(o.status))
+        (prev ?? []).map(o => o.id === order.id ? order : o).filter(o => ACTIVE.includes(o.status))
       );
     };
-
     socket.on('order:new', handleNew);
     socket.on('order:statusUpdated', handleUpdated);
-    return () => {
-      socket.off('order:new', handleNew);
-      socket.off('order:statusUpdated', handleUpdated);
-    };
+    return () => { socket.off('order:new', handleNew); socket.off('order:statusUpdated', handleUpdated); };
   }, [queryClient]);
 
-  const columns: Record<string, Order[]> = {
-    PENDING:   orders.filter(o => o.status === 'PENDING'),
-    PREPARING: orders.filter(o => o.status === 'PREPARING'),
-    READY:     orders.filter(o => o.status === 'READY'),
-  };
+  type ActiveStatus = 'PENDING' | 'PREPARING' | 'READY';
+  const cols: Record<ActiveStatus, Order[]> = { PENDING: orders.filter(o => o.status === 'PENDING'), PREPARING: orders.filter(o => o.status === 'PREPARING'), READY: orders.filter(o => o.status === 'READY') };
+  const totalActive = orders.length;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen" style={{ background: '#0A0A0C', color: '#fff' }}
+      onClick={() => { audioUnlocked.current = true; }}>
+      <header className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #1E1E24', background: '#111116' }}>
         <div className="flex items-center gap-3">
           <span className="text-2xl">👨‍🍳</span>
           <div>
-            <h1 className="text-lg font-bold">Kitchen Display</h1>
-            <p className="text-xs text-gray-400">Orders update in real time</p>
+            <h1 className="font-black text-lg text-white">Kitchen Display</h1>
+            <p className="text-xs" style={{ color: '#6B7280' }}>Click anywhere to enable sound alerts</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-xs text-gray-400">Live</span>
+        <div className="flex items-center gap-3">
+          {totalActive > 0 && (
+            <span className="text-sm font-bold px-3 py-1.5 rounded-xl" style={{ background: 'rgba(249,115,22,0.15)', color: '#F97316', border: '1px solid rgba(249,115,22,0.2)' }}>
+              {totalActive} active
+            </span>
+          )}
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-xs" style={{ color: '#6B7280' }}>Live</span>
+          </div>
+          <DarkModeToggle />
         </div>
       </header>
 
-      {isLoading ? (
-        <div className="flex justify-center py-24">
-          <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      {orders.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-40 gap-4" style={{ color: '#374151' }}>
+          <span className="text-7xl">🍳</span>
+          <p className="text-xl font-bold text-white">All caught up!</p>
+          <p className="text-sm" style={{ color: '#6B7280' }}>New orders will appear here instantly</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
-          {(['PENDING', 'PREPARING', 'READY'] as OrderStatus[]).map(status => (
-            <div key={status}>
-              {/* Column header */}
-              <div className={`flex items-center gap-2 mb-4`}>
-                <span className={`w-3 h-3 rounded-full ${status === 'PENDING' ? 'bg-yellow-400' : status === 'PREPARING' ? 'bg-blue-400' : 'bg-green-400'}`} />
-                <h2 className="font-bold text-sm uppercase tracking-widest text-gray-300">
-                  {STATUS_META[status].label}
-                </h2>
-                <span className="ml-auto bg-gray-700 text-gray-300 text-xs font-bold px-2 py-0.5 rounded-full">
-                  {columns[status].length}
-                </span>
-              </div>
-
-              {/* Cards */}
-              <div className="space-y-4">
-                {columns[status].length === 0 ? (
-                  <div className="border-2 border-dashed border-gray-700 rounded-2xl p-8 text-center text-gray-600 text-sm">
-                    No orders
-                  </div>
-                ) : (
-                  columns[status].map(order => (
-                    <div
-                      key={order.id}
-                      className={`transition-all duration-700 ${newOrderIds.has(order.id) ? 'ring-4 ring-orange-400 ring-offset-2 ring-offset-gray-900 rounded-2xl scale-[1.02]' : ''}`}
-                    >
-                      <OrderCard
-                        order={order}
-                        onStatusUpdate={(id, status) => updateStatus({ id, status })}
-                      />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 p-5">
+          {(Object.keys(cols) as ActiveStatus[]).map(status => {
+            const meta = COL_META[status];
+            return (
+              <div key={status}>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: meta.dot }} />
+                  <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: '#9CA3AF' }}>{meta.label}</h2>
+                  <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#1E1E24', color: '#6B7280' }}>
+                    {cols[status].length}
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {cols[status].length === 0 ? (
+                    <div className="rounded-2xl p-8 text-center text-sm" style={{ border: '2px dashed #1E1E24', color: '#374151' }}>
+                      Empty
                     </div>
-                  ))
-                )}
+                  ) : cols[status].map((order: Order) => (
+                    <div key={order.id} className={`transition-all duration-500 ${newIds.has(order.id) ? 'ring-2 ring-orange-400 rounded-2xl' : ''}`}>
+                      <OrderCard order={order} onAdvance={() => advance({ id: order.id, status: NEXT_STATUS[order.status] as OrderStatus })} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!isLoading && orders.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-32 text-gray-600">
-          <span className="text-6xl mb-4">🍳</span>
-          <p className="text-lg font-semibold">Waiting for orders…</p>
-          <p className="text-sm mt-1">New orders will appear here instantly</p>
+            );
+          })}
         </div>
       )}
     </div>
