@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { ordersApi } from '../lib/api';
+import { ordersApi, authApi } from '../lib/api';
 import socket from '../lib/socket';
 import DarkModeToggle from '../components/DarkModeToggle';
 import type { Order, OrderStatus } from '../types';
@@ -92,7 +93,16 @@ function OrderCard({ order, onAdvance }: { order: Order; onAdvance: () => void }
 
 export default function KitchenPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const audioUnlocked = useRef(false);
+
+  const { mutate: logout } = useMutation({
+    mutationFn: authApi.logout,
+    onSuccess: () => {
+      queryClient.clear();
+      navigate('/login', { replace: true });
+    },
+  });
 
   // ✅ Load active orders from API on mount — persists across navigation
   const { data: orders = [], isLoading } = useQuery<Order[]>({
@@ -179,6 +189,13 @@ export default function KitchenPage() {
               <span className="text-xs" style={{ color: 'var(--text-3)' }}>Live</span>
             </div>
             <DarkModeToggle />
+            <button
+              onClick={() => logout()}
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:scale-105"
+              style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}
+            >
+              Sign Out
+            </button>
           </div>
         </div>
       </header>

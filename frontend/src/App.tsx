@@ -6,6 +6,8 @@ import MenuPage from './pages/MenuPage';
 import OrderTrackerPage from './pages/OrderTrackerPage';
 import KitchenPage from './pages/KitchenPage';
 import AdminPage from './pages/AdminPage';
+import LoginPage from './pages/LoginPage';
+import ProtectedRoute from './components/ProtectedRoute';
 import { initTheme, useThemeStore } from './stores/themeStore';
 
 initTheme();
@@ -27,8 +29,23 @@ export default function App() {
         <Routes>
           <Route path="/" element={<MenuPage />} />
           <Route path="/order/:id" element={<OrderTrackerPage />} />
-          <Route path="/kitchen" element={<KitchenPage />} />
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/kitchen"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'kitchen']}>
+                <KitchenPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster

@@ -1,7 +1,17 @@
 import axios from 'axios';
 import type { MenuItem, Order, DashboardStats } from '../types';
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/' });
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/',
+  withCredentials: true,
+});
+
+export const authApi = {
+  login: (role: string, password: string) =>
+    api.post<{ role: string }>('/auth/login', { role, password }).then(r => r.data),
+  logout: () => api.post('/auth/logout').then(r => r.data),
+  me: () => api.get<{ role: string }>('/auth/me').then(r => r.data),
+};
 
 export const menuApi = {
   getAll: () => api.get<MenuItem[]>('/menu').then(r => r.data),
