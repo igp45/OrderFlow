@@ -7,6 +7,7 @@ import orderRoutes from './routes/order.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import aiRoutes from './routes/ai.routes';
 import authRoutes from './routes/auth.routes';
+import settingsRoutes from './routes/settings.routes';
 import { requireAuth } from './middleware/auth.middleware';
 import { errorHandler } from './middleware/error.middleware';
 
@@ -23,6 +24,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use('/auth', authRoutes);
+app.use('/settings', settingsRoutes);
 app.use('/menu', menuRoutes);
 app.use('/orders', orderRoutes);
 app.use('/dashboard', requireAuth('admin'), dashboardRoutes);

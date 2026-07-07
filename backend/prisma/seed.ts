@@ -36,6 +36,12 @@ const ITEMS = [
   { name: 'Vanilla Ice Cream', description: 'Three scoops of rich Madagascar vanilla ice cream with your choice of sauce.', price: 4500, imageUrl: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=400', category: 'Desserts' },
 ];
 
+const DEFAULT_SETTINGS = [
+  { key: 'bank_name', value: 'First Bank Nigeria' },
+  { key: 'account_name', value: 'OrderFlow Restaurant' },
+  { key: 'account_number', value: '0000000000' },
+];
+
 async function main() {
   console.log('Seeding menu items...');
   const existing = await prisma.menuItem.findMany({ select: { name: true } });
@@ -48,6 +54,16 @@ async function main() {
   } else {
     console.log('All items already exist.');
   }
+
+  console.log('Seeding default settings...');
+  for (const s of DEFAULT_SETTINGS) {
+    const existing = await prisma.setting.findUnique({ where: { key: s.key } });
+    if (!existing) {
+      await prisma.setting.create({ data: s });
+      console.log(`  Created setting: ${s.key}`);
+    }
+  }
+
   console.log('Done!');
 }
 

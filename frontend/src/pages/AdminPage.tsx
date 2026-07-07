@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { QRCodeCanvas } from 'qrcode.react';
 import toast from 'react-hot-toast';
-import { dashboardApi, aiApi, menuApi, ordersApi, authApi } from '../lib/api';
+import { dashboardApi, aiApi, menuApi, ordersApi, authApi, settingsApi } from '../lib/api';
+import type { PaymentDetails } from '../lib/api';
 import socket from '../lib/socket';
 import DarkModeToggle from '../components/DarkModeToggle';
 import type { Order, MenuItem, OrderStatus } from '../types';
@@ -65,7 +66,7 @@ export default function AdminPage() {
       navigate('/login', { replace: true });
     },
   });
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'menu' | 'qr'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'menu' | 'qr' | 'settings'>('overview');
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>('');
 
   const { data: allOrders = [], isLoading: ordersLoading } = useQuery({
@@ -112,6 +113,41 @@ export default function AdminPage() {
     onError: () => toast.error('Failed to add item. Check all fields.'),
   });
 
+  // Settings state
+  const [bankForm, setBankForm] = useState<PaymentDetails>({ bankName: '', accountName: '', accountNumber: '' });
+  const [bankLoaded, setBankLoaded] = useState(false);
+  const [pwRole, setPwRole] = useState<'admin' | 'kitchen'>('admin');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const { data: paymentDetails, refetch: refetchPayment } = useQuery({
+    queryKey: ['settings-payment'],
+    queryFn: settingsApi.getPayment,
+    enabled: activeTab === 'settings',
+  });
+
+  useEffect(() => {
+    if (paymentDetails && !bankLoaded) {
+      setBankForm(paymentDetails);
+      setBankLoaded(true);
+    }
+  }, [paymentDetails, bankLoaded]);
+
+  const { mutate: saveBank, isPending: savingBank } = useMutation({
+    mutationFn: () => settingsApi.updatePayment(bankForm),
+    onSuccess: () => { refetchPayment(); toast.success('Bank details updated!'); },
+    onError: () => toast.error('Failed to update bank details.'),
+  });
+
+  const { mutate: savePassword, isPending: savingPassword } = useMutation({
+    mutationFn: () => settingsApi.changePassword(pwRole, newPassword),
+    onSuccess: () => {
+      toast.success(`${pwRole === 'admin' ? 'Admin' : 'Kitchen'} password updated!`);
+      setNewPassword(''); setConfirmPassword('');
+    },
+    onError: () => toast.error('Failed to update password.'),
+  });
+
   useEffect(() => {
     const refresh = (_order: Order) => queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     socket.on('order:new', refresh);
@@ -139,6 +175,7 @@ export default function AdminPage() {
     { id: 'orders' as const, label: '🧾 Orders' },
     { id: 'menu' as const, label: '🍽️ Menu' },
     { id: 'qr' as const, label: '📱 QR Codes' },
+    { id: 'settings' as const, label: '⚙️ Settings' },
   ];
 
   return (
@@ -460,6 +497,156 @@ export default function AdminPage() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="max-w-2xl mx-auto space-y-6">
+
+            {/* Bank Details */}
+            <div className="card p-6 space-y-4">
+              <div>
+                <h2 className="font-bold text-lg" style={{ color: 'var(--text)' }}>💳 Bank Transfer Details</h2>
+                <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
+                  Customers see these details when their order is ready for pickup.
+                </p>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { label: 'Bank Name', key: 'bankName' as const, placeholder: 'e.g. First Bank Nigeria' },
+                  { label: 'Account Name', key: 'accountName' as const, placeholder: 'e.g. OrderFlow Restaurant' },
+                  { label: 'Account Number', key: 'accountNumber' as const, placeholder: 'e.g. 0123456789' },
+                ].map(({ label, key, placeholder }) => (
+                  <div key={key}>
+                    <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-3)' }}>
+                      {label}
+                    </label>
+                    <input
+                      value={bankForm[key]}
+                      onChange={e => setBankForm(f => ({ ...f, [key]: e.target.value }))}
+                      placeholder={placeholder}
+                      className="input w-full"
+                    />
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => saveBank()}
+                disabled={savingBank}
+                className="btn btn-primary w-full"
+                style={{ padding: '12px', borderRadius: '12px' }}
+              >
+                {savingBank ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving…
+                  </span>
+                ) : '💾 Save Bank Details'}
+              </button>
+
+              {/* Preview */}
+              {(bankForm.bankName || bankForm.accountName || bankForm.accountNumber) && (
+                <div className="rounded-2xl p-4 space-y-2" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Customer Preview</p>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: 'var(--text-2)' }}>Bank</span>
+                      <span className="font-semibold" style={{ color: 'var(--text)' }}>{bankForm.bankName || '—'}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: 'var(--text-2)' }}>Account Name</span>
+                      <span className="font-semibold" style={{ color: 'var(--text)' }}>{bankForm.accountName || '—'}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: 'var(--text-2)' }}>Account Number</span>
+                      <span className="font-bold text-base" style={{ color: 'var(--accent)' }}>{bankForm.accountNumber || '—'}</span>
+                    </div>
+                    <div className="flex justify-between text-sm pt-2 mt-2" style={{ borderTop: '1px solid var(--border)' }}>
+                      <span style={{ color: 'var(--text-2)' }}>Amount</span>
+                      <span className="font-black" style={{ color: 'var(--text)' }}>₦{(12000).toLocaleString()}.00 <span className="text-xs font-normal" style={{ color: 'var(--text-3)' }}>(example)</span></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Change Passwords */}
+            <div className="card p-6 space-y-4">
+              <div>
+                <h2 className="font-bold text-lg" style={{ color: 'var(--text)' }}>🔐 Change Password</h2>
+                <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
+                  Update the login password for admin or kitchen staff.
+                </p>
+              </div>
+
+              {/* Role toggle */}
+              <div className="grid grid-cols-2 gap-2">
+                {(['admin', 'kitchen'] as const).map(r => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setPwRole(r)}
+                    className="py-2.5 px-4 rounded-xl text-sm font-bold transition-all"
+                    style={pwRole === r
+                      ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 4px 12px rgba(249,115,22,0.3)' }
+                      : { background: 'var(--surface-2)', color: 'var(--text-2)', border: '1.5px solid var(--border)' }
+                    }
+                  >
+                    {r === 'admin' ? '📊 Admin' : '👨‍🍳 Kitchen'}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-3)' }}>
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="Enter new password (min 6 characters)"
+                    className="input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-3)' }}>
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat new password"
+                    className="input w-full"
+                  />
+                  {confirmPassword && newPassword !== confirmPassword && (
+                    <p className="text-xs text-red-500 mt-1">Passwords do not match.</p>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return; }
+                  if (newPassword.length < 6) { toast.error('Password must be at least 6 characters'); return; }
+                  savePassword();
+                }}
+                disabled={savingPassword || !newPassword || newPassword !== confirmPassword}
+                className="btn btn-primary w-full"
+                style={{ padding: '12px', borderRadius: '12px', opacity: (!newPassword || newPassword !== confirmPassword) ? 0.5 : 1 }}
+              >
+                {savingPassword ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Updating…
+                  </span>
+                ) : `🔐 Update ${pwRole === 'admin' ? 'Admin' : 'Kitchen'} Password`}
+              </button>
+            </div>
+
           </div>
         )}
       </main>

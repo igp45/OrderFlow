@@ -40,3 +40,17 @@ export const dashboardApi = {
 export const aiApi = {
   predict: () => api.post<Record<string, number>>('/ai/predict').then(r => r.data),
 };
+
+export interface PaymentDetails {
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+}
+
+export const settingsApi = {
+  getPayment: () => api.get<PaymentDetails>('/settings/payment').then(r => r.data),
+  updatePayment: (data: Partial<PaymentDetails>) =>
+    api.patch<PaymentDetails>('/settings/payment', data).then(r => r.data),
+  changePassword: (role: 'admin' | 'kitchen', newPassword: string) =>
+    api.patch('/settings/passwords', { role, newPassword }).then(r => r.data),
+};

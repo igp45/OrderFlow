@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { ordersApi } from '../lib/api';
+import { ordersApi, settingsApi } from '../lib/api';
 import socket from '../lib/socket';
 import DarkModeToggle from '../components/DarkModeToggle';
 import type { Order, OrderStatus } from '../types';
@@ -60,6 +60,12 @@ export default function OrderTrackerPage() {
     queryKey: ['order', id],
     queryFn: () => ordersApi.getById(id!),
     enabled: !!id,
+  });
+
+  const { data: payment } = useQuery({
+    queryKey: ['settings-payment'],
+    queryFn: settingsApi.getPayment,
+    enabled: order?.status === 'READY' || order?.status === 'COMPLETED',
   });
 
   useEffect(() => {
@@ -187,6 +193,52 @@ export default function OrderTrackerPage() {
             <span className="text-xl font-black" style={{ color: 'var(--text)' }}>₦{order.total.toFixed(2)}</span>
           </div>
         </div>
+
+        {/* Payment Card — shown when order is READY or COMPLETED */}
+        {(order.status === 'READY' || order.status === 'COMPLETED') && payment && (payment.bankName || payment.accountNumber) && (
+          <div className="card p-6 space-y-4" style={{ border: '2px solid #10B981', boxShadow: '0 0 24px rgba(16,185,129,0.12)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: 'rgba(16,185,129,0.12)' }}>💳</div>
+              <div>
+                <h2 className="font-bold" style={{ color: 'var(--text)' }}>Payment</h2>
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>Transfer the exact amount below</p>
+              </div>
+            </div>
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--surface-2)' }}>
+              {payment.bankName && (
+                <div className="flex justify-between items-center text-sm">
+                  <span style={{ color: 'var(--text-2)' }}>Bank</span>
+                  <span className="font-semibold" style={{ color: 'var(--text)' }}>{payment.bankName}</span>
+                </div>
+              )}
+              {payment.accountName && (
+                <div className="flex justify-between items-center text-sm">
+                  <span style={{ color: 'var(--text-2)' }}>Account Name</span>
+                  <span className="font-semibold" style={{ color: 'var(--text)' }}>{payment.accountName}</span>
+                </div>
+              )}
+              {payment.accountNumber && (
+                <div className="flex justify-between items-center text-sm">
+                  <span style={{ color: 'var(--text-2)' }}>Account Number</span>
+                  <span
+                    className="font-black text-base cursor-pointer select-all"
+                    style={{ color: '#10B981' }}
+                    onClick={() => { navigator.clipboard?.writeText(payment.accountNumber); toast.success('Account number copied!'); }}
+                  >
+                    {payment.accountNumber}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-3 mt-1" style={{ borderTop: '1px solid var(--border)' }}>
+                <span className="font-semibold text-sm" style={{ color: 'var(--text-2)' }}>Amount to Pay</span>
+                <span className="text-2xl font-black" style={{ color: 'var(--text)' }}>₦{order.total.toLocaleString('en-NG', { minimumFractionDigits: 2 })}</span>
+              </div>
+            </div>
+            <p className="text-xs text-center" style={{ color: 'var(--text-3)' }}>
+              Tap the account number to copy · Payment confirms your order
+            </p>
+          </div>
+        )}
 
         <Link to="/" className="block text-center text-sm font-medium py-2 transition-all hover:opacity-70" style={{ color: 'var(--accent)' }}>
           ← Order more food

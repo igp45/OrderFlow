@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { verifyPassword } from '../services/settings.service';
 
 const router = Router();
 
@@ -15,18 +16,16 @@ function cookieOpts(isProd: boolean) {
   };
 }
 
-router.post('/login', (req: Request, res: Response) => {
+router.post('/login', async (req: Request, res: Response) => {
   const { role, password } = req.body as { role?: string; password?: string };
   const isProd = process.env.NODE_ENV === 'production';
 
-  const passwords: Record<string, string> = {
-    admin: process.env.ADMIN_PASSWORD || '',
-    kitchen: process.env.KITCHEN_PASSWORD || '',
-  };
-
-  if (!role || !passwords[role] || password !== passwords[role]) {
+  if (!role || !['admin', 'kitchen'].includes(role) || !password) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
+
+  const valid = await verifyPassword(role as 'admin' | 'kitchen', password);
+  if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
   const token = jwt.sign({ role }, JWT_SECRET, { expiresIn: '7d' });
   res.cookie(COOKIE_NAME, token, cookieOpts(isProd));
