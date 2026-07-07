@@ -32,7 +32,7 @@ function MenuItemRow({ item, onToggle, onDelete }: { item: MenuItem; onToggle: (
         onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/48?text=🍽️'; }} />
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm truncate" style={{ color: 'var(--text)' }}>{item.name}</p>
-        <p className="text-xs" style={{ color: 'var(--text-3)' }}>{item.category} · ${item.price.toFixed(2)}</p>
+        <p className="text-xs" style={{ color: 'var(--text-3)' }}>{item.category} · ₦{item.price.toFixed(2)}</p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         <button onClick={onToggle}
@@ -175,7 +175,7 @@ export default function AdminPage() {
             ) : stats && (
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <StatCard icon="💰" label="Revenue Today" value={`$${stats.revenueToday.toFixed(2)}`} sub="today" accent />
+                  <StatCard icon="💰" label="Revenue Today" value={`₦${stats.revenueToday.toFixed(2)}`} sub="today" accent />
                   <StatCard icon="🧾" label="Total Orders" value={stats.totalOrders} sub="today" />
                   <StatCard icon="🔥" label="Active" value={stats.activeOrders} sub="live" />
                   <StatCard icon="✅" label="Completed" value={stats.completedOrders} sub="today" />
@@ -194,10 +194,10 @@ export default function AdminPage() {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                       <XAxis dataKey="time" tick={{ fontSize: 12, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 12, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v.toFixed(0)}`} />
+                      <YAxis tick={{ fontSize: 12, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} tickFormatter={v => `₦${v.toFixed(0)}`} />
                       <Tooltip
                         contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', fontSize: '13px', color: 'var(--text)' }}
-                        formatter={(v) => [`$${Number(v).toFixed(2)}`, 'Revenue']}
+                        formatter={(v) => [`₦${Number(v).toFixed(2)}`, 'Revenue']}
                       />
                       <Area type="monotone" dataKey="value" stroke="#F97316" strokeWidth={2.5} fill="url(#rev)" dot={{ fill: '#F97316', r: 4 }} activeDot={{ r: 6 }} />
                     </AreaChart>
@@ -315,7 +315,7 @@ export default function AdminPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>${order.total.toFixed(2)}</span>
+                        <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>₦{order.total.toFixed(2)}</span>
                         <span className="text-xs font-bold px-2.5 py-1 rounded-xl" style={{ background: sc.bg, color: sc.text }}>
                           {order.status}
                         </span>
@@ -331,7 +331,7 @@ export default function AdminPage() {
               <div className="card p-4 flex justify-between items-center">
                 <span className="font-semibold" style={{ color: 'var(--text-2)' }}>Total revenue shown</span>
                 <span className="text-xl font-black" style={{ color: 'var(--accent)' }}>
-                  ${allOrders.filter(o => o.status === 'COMPLETED' || o.status === 'READY').reduce((s, o) => s + o.total, 0).toFixed(2)}
+                  ₦{allOrders.filter(o => o.status === 'COMPLETED' || o.status === 'READY').reduce((s, o) => s + o.total, 0).toFixed(2)}
                 </span>
               </div>
             )}

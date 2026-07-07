@@ -34,7 +34,7 @@ export default function MenuItemCard({ item }: { item: MenuItem }) {
         <p className="text-sm flex-1 mb-4 line-clamp-2" style={{ color: 'var(--text-2)' }}>{item.description}</p>
 
         <div className="flex items-center justify-between mt-auto">
-          <span className="text-xl font-black" style={{ color: 'var(--text)' }}>${item.price.toFixed(2)}</span>
+          <span className="text-xl font-black" style={{ color: 'var(--text)' }}>₦{item.price.toFixed(2)}</span>
 
           {!item.available ? (
             <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Unavailable</span>

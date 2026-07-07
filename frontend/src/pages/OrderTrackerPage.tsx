@@ -173,7 +173,7 @@ export default function OrderTrackerPage() {
                   <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{item.menuItem.name}</p>
                   <p className="text-xs" style={{ color: 'var(--text-3)' }}>×{item.quantity}</p>
                 </div>
-                <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>${(item.unitPrice * item.quantity).toFixed(2)}</p>
+                <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>₦{(item.unitPrice * item.quantity).toFixed(2)}</p>
               </div>
             ))}
           </div>
@@ -184,7 +184,7 @@ export default function OrderTrackerPage() {
           )}
           <div className="flex justify-between items-center pt-4 mt-4" style={{ borderTop: '1px solid var(--border)' }}>
             <span className="font-semibold" style={{ color: 'var(--text-2)' }}>Total</span>
-            <span className="text-xl font-black" style={{ color: 'var(--text)' }}>${order.total.toFixed(2)}</span>
+            <span className="text-xl font-black" style={{ color: 'var(--text)' }}>₦{order.total.toFixed(2)}</span>
           </div>
         </div>
 

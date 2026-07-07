@@ -63,7 +63,7 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
                 onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/56?text=🍽️'; }} />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate" style={{ color: 'var(--text)' }}>{menuItem.name}</p>
-                <p className="text-sm font-bold" style={{ color: 'var(--accent)' }}>${(menuItem.price * quantity).toFixed(2)}</p>
+                <p className="text-sm font-bold" style={{ color: 'var(--accent)' }}>₦{(menuItem.price * quantity).toFixed(2)}</p>
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button onClick={() => updateQuantity(menuItem.id, quantity - 1)}
@@ -90,7 +90,7 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
             {error && <p className="text-red-500 text-xs">{error}</p>}
             <div className="flex items-center justify-between">
               <span className="text-sm" style={{ color: 'var(--text-2)' }}>Total</span>
-              <span className="text-2xl font-black" style={{ color: 'var(--text)' }}>${total().toFixed(2)}</span>
+              <span className="text-2xl font-black" style={{ color: 'var(--text)' }}>₦{total().toFixed(2)}</span>
             </div>
             <button onClick={() => { setError(''); placeOrder(); }} disabled={isPending} className="btn btn-primary w-full text-base" style={{ padding: '14px', borderRadius: '14px', fontSize: '15px' }}>
               {isPending ? (
