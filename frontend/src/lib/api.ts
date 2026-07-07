@@ -18,6 +18,9 @@ export const ordersApi = {
   getById: (id: string) => api.get<Order>(`/orders/${id}`).then(r => r.data),
   updateStatus: (id: string, status: string) =>
     api.patch<Order>(`/orders/${id}/status`, { status }).then(r => r.data),
+  getActive: () => api.get<Order[]>('/orders/active').then(r => r.data),
+  getAll: (status?: string) =>
+    api.get<Order[]>('/orders', { params: status ? { status } : {} }).then(r => r.data),
 };
 
 export const dashboardApi = {

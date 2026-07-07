@@ -4,6 +4,8 @@ import prisma from '../prisma/client';
 import { AppError } from '../middleware/error.middleware';
 import { CreateOrderInput } from '../validators/order.validators';
 
+const ORDER_INCLUDE = { items: { include: { menuItem: true } } } as const;
+
 export async function createOrder(input: CreateOrderInput, io: Server) {
   const menuItems = await prisma.menuItem.findMany({
     where: { id: { in: input.items.map((i: { menuItemId: string; quantity: number }) => i.menuItemId) } },
@@ -35,22 +37,18 @@ export async function createOrder(input: CreateOrderInput, io: Server) {
         })),
       },
     },
-    include: {
-      items: { include: { menuItem: true } },
-    },
+    include: ORDER_INCLUDE,
   });
 
   io.emit('order:new', order);
-
   return order;
 }
 
 export async function getOrderById(id: string) {
   const order = await prisma.order.findUnique({
     where: { id },
-    include: { items: { include: { menuItem: true } } },
+    include: ORDER_INCLUDE,
   });
-
   if (!order) throw new AppError(404, 'Order not found');
   return order;
 }
@@ -62,10 +60,32 @@ export async function updateOrderStatus(id: string, status: OrderStatus, io: Ser
   const updated = await prisma.order.update({
     where: { id },
     data: { status },
-    include: { items: { include: { menuItem: true } } },
+    include: ORDER_INCLUDE,
   });
 
   io.emit('order:statusUpdated', updated);
-
   return updated;
+}
+
+export async function getActiveOrders() {
+  return prisma.order.findMany({
+    where: { status: { in: ['PENDING', 'PREPARING', 'READY'] } },
+    include: ORDER_INCLUDE,
+    orderBy: { createdAt: 'asc' },
+  });
+}
+
+export async function getAllOrders(status?: string) {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const statusFilter = status
+    ? { status: { in: status.split(',') as OrderStatus[] } }
+    : {};
+
+  return prisma.order.findMany({
+    where: { createdAt: { gte: startOfDay }, ...statusFilter },
+    include: ORDER_INCLUDE,
+    orderBy: { createdAt: 'desc' },
+  });
 }

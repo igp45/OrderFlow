@@ -3,10 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { QRCodeCanvas } from 'qrcode.react';
 import toast from 'react-hot-toast';
-import { dashboardApi, aiApi, menuApi } from '../lib/api';
+import { dashboardApi, aiApi, menuApi, ordersApi } from '../lib/api';
 import socket from '../lib/socket';
 import DarkModeToggle from '../components/DarkModeToggle';
-import type { Order, MenuItem } from '../types';
+import type { Order, MenuItem, OrderStatus } from '../types';
 
 const SITE_URL = import.meta.env.VITE_API_URL
   ? window.location.origin
@@ -55,7 +55,15 @@ const COLORS = ['#F97316', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'];
 export default function AdminPage() {
   const queryClient = useQueryClient();
   const [prediction, setPrediction] = useState<Record<string, number> | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'menu' | 'qr'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'menu' | 'qr'>('overview');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('');
+
+  const { data: allOrders = [], isLoading: ordersLoading } = useQuery({
+    queryKey: ['admin-orders', orderStatusFilter],
+    queryFn: () => ordersApi.getAll(orderStatusFilter || undefined),
+    enabled: activeTab === 'orders',
+    refetchInterval: activeTab === 'orders' ? 15000 : false,
+  });
   const [qrTable, setQrTable] = useState('1');
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', description: '', price: '', imageUrl: '', category: '', available: true });
@@ -118,6 +126,7 @@ export default function AdminPage() {
 
   const tabs = [
     { id: 'overview' as const, label: '📊 Overview' },
+    { id: 'orders' as const, label: '🧾 Orders' },
     { id: 'menu' as const, label: '🍽️ Menu' },
     { id: 'qr' as const, label: '📱 QR Codes' },
   ];
@@ -248,6 +257,83 @@ export default function AdminPage() {
                   )}
                 </div>
               </>
+            )}
+          </div>
+        )}
+
+        {/* ── ORDERS TAB ── */}
+        {activeTab === 'orders' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <h2 className="font-bold text-lg" style={{ color: 'var(--text)' }}>
+                Today's Orders {!ordersLoading && <span style={{ color: 'var(--text-3)', fontWeight: 400, fontSize: '14px' }}>({allOrders.length})</span>}
+              </h2>
+              <div className="flex gap-2 flex-wrap">
+                {['', 'PENDING', 'PREPARING', 'READY', 'COMPLETED'].map(s => (
+                  <button key={s} onClick={() => setOrderStatusFilter(s)}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-xl transition-all"
+                    style={orderStatusFilter === s
+                      ? { background: 'var(--accent)', color: '#fff' }
+                      : { background: 'var(--surface-2)', color: 'var(--text-2)', border: '1px solid var(--border)' }
+                    }>
+                    {s || 'All'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {ordersLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => <div key={i} className="skeleton h-16 rounded-2xl" />)}
+              </div>
+            ) : allOrders.length === 0 ? (
+              <div className="card p-12 text-center">
+                <p className="text-3xl mb-3">🧾</p>
+                <p className="font-semibold" style={{ color: 'var(--text)' }}>No orders yet today</p>
+              </div>
+            ) : (
+              <div className="card overflow-hidden">
+                {allOrders.map((order, i) => {
+                  const statusColors: Record<OrderStatus, { bg: string; text: string }> = {
+                    PENDING:   { bg: 'rgba(245,158,11,0.1)',  text: '#F59E0B' },
+                    PREPARING: { bg: 'rgba(59,130,246,0.1)',  text: '#3B82F6' },
+                    READY:     { bg: 'rgba(16,185,129,0.1)', text: '#10B981' },
+                    COMPLETED: { bg: 'rgba(107,114,128,0.1)', text: '#6B7280' },
+                  };
+                  const sc = statusColors[order.status];
+                  return (
+                    <div key={order.id} className="flex items-center gap-4 px-4 py-3 transition-all hover:bg-[var(--surface-2)]"
+                      style={{ borderBottom: i < allOrders.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                      <span className="text-lg font-black w-12 flex-shrink-0" style={{ color: 'var(--text)' }}>#{order.orderNumber}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>
+                          {order.items.map(i => `${i.menuItem.name} ×${i.quantity}`).join(', ')}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+                          {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {order.notes && <span className="ml-2 italic">· {order.notes}</span>}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>${order.total.toFixed(2)}</span>
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-xl" style={{ background: sc.bg, color: sc.text }}>
+                          {order.status}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Daily total */}
+            {allOrders.length > 0 && (
+              <div className="card p-4 flex justify-between items-center">
+                <span className="font-semibold" style={{ color: 'var(--text-2)' }}>Total revenue shown</span>
+                <span className="text-xl font-black" style={{ color: 'var(--accent)' }}>
+                  ${allOrders.filter(o => o.status === 'COMPLETED' || o.status === 'READY').reduce((s, o) => s + o.total, 0).toFixed(2)}
+                </span>
+              </div>
             )}
           </div>
         )}
