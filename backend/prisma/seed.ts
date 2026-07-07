@@ -22,14 +22,14 @@ const ITEMS = [
   // Sides
   { name: 'Crispy Fries', description: 'Golden, hand-cut fries seasoned with sea salt and served with house dipping sauce.', price: 4.99, imageUrl: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400', category: 'Sides' },
   { name: 'Onion Rings', description: 'Thick-cut onion rings in a crispy golden batter with smoky chipotle dip.', price: 5.99, imageUrl: 'https://images.unsplash.com/photo-1639024471283-03518883512d?w=400', category: 'Sides' },
-  { name: 'Sweet Potato Fries', description: 'Crispy sweet potato fries with a sprinkle of smoked paprika and sour cream dip.', price: 5.49, imageUrl: 'https://images.unsplash.com/photo-1629689782037-4ae5e97f4e3e?w=400', category: 'Sides' },
+  { name: 'Sweet Potato Fries', description: 'Crispy sweet potato fries with a sprinkle of smoked paprika and sour cream dip.', price: 5.49, imageUrl: 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=400', category: 'Sides' },
   { name: 'Mac & Cheese', description: 'Creamy three-cheese macaroni baked with a golden breadcrumb crust.', price: 7.99, imageUrl: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=400', category: 'Sides' },
   // Drinks
   { name: 'Soft Drink', description: 'Your choice of Coke, Diet Coke, Sprite, or Lemonade. Served over ice.', price: 2.99, imageUrl: 'https://images.unsplash.com/photo-1581636625402-29b2a704ef13?w=400', category: 'Drinks' },
   { name: 'Fresh Lemonade', description: 'House-squeezed lemonade with fresh mint and a hint of ginger. Refreshing and sweet.', price: 3.99, imageUrl: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400', category: 'Drinks' },
   { name: 'Iced Coffee', description: 'Double-shot espresso over ice with your choice of milk. Add syrup for 50p extra.', price: 4.49, imageUrl: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400', category: 'Drinks' },
   { name: 'Mango Smoothie', description: 'Blended fresh mango, yoghurt, and honey — thick, creamy, and tropical.', price: 5.49, imageUrl: 'https://images.unsplash.com/photo-1546173159-315724a31696?w=400', category: 'Drinks' },
-  { name: 'Milkshake', description: 'Thick, creamy milkshake in chocolate, vanilla, or strawberry. Topped with whipped cream.', price: 5.99, imageUrl: 'https://images.unsplash.com/photo-1572490122747-3e9197aa5e7d?w=400', category: 'Drinks' },
+  { name: 'Milkshake', description: 'Thick, creamy milkshake in chocolate, vanilla, or strawberry. Topped with whipped cream.', price: 5.99, imageUrl: 'https://images.unsplash.com/photo-1568901839119-631418a3910d?w=400', category: 'Drinks' },
   // Desserts
   { name: 'Chocolate Brownie', description: 'Warm gooey chocolate brownie served with vanilla ice cream and chocolate drizzle.', price: 6.99, imageUrl: 'https://images.unsplash.com/photo-1564355808539-22fda35bed7e?w=400', category: 'Desserts' },
   { name: 'New York Cheesecake', description: 'Classic creamy cheesecake on a buttery biscuit base with seasonal berry coulis.', price: 7.49, imageUrl: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=400', category: 'Desserts' },
