@@ -170,31 +170,32 @@ export default function KitchenPage() {
     >
       {/* Header */}
       <header style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: 'var(--accent-soft)' }}>👨‍🍳</div>
-            <div>
-              <h1 className="font-black text-lg" style={{ color: 'var(--text)' }}>Kitchen Display</h1>
-              <p className="text-xs" style={{ color: 'var(--text-3)' }}>Click anywhere to enable sound alerts</p>
+        <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-lg sm:text-xl flex-shrink-0" style={{ background: 'var(--accent-soft)' }}>👨‍🍳</div>
+            <div className="min-w-0">
+              <h1 className="font-black text-base sm:text-lg truncate" style={{ color: 'var(--text)' }}>Kitchen Display</h1>
+              <p className="text-xs hidden sm:block" style={{ color: 'var(--text-3)' }}>Click anywhere to enable sound alerts</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {orders.length > 0 && (
-              <span className="text-sm font-bold px-3 py-1.5 rounded-xl" style={{ background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent)30' }}>
-                {orders.length} active
+              <span className="text-xs sm:text-sm font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl" style={{ background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent)30' }}>
+                {orders.length} <span className="hidden sm:inline">active</span>
               </span>
             )}
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-xs" style={{ color: 'var(--text-3)' }}>Live</span>
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
+              <span className="text-xs hidden sm:inline" style={{ color: 'var(--text-3)' }}>Live</span>
             </div>
             <DarkModeToggle />
             <button
               onClick={() => logout()}
-              className="text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:scale-105"
+              className="text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-xl transition-all hover:scale-105"
               style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}
             >
-              Sign Out
+              <span className="hidden sm:inline">Sign Out</span>
+              <span className="sm:hidden">↩</span>
             </button>
           </div>
         </div>
@@ -221,7 +222,7 @@ export default function KitchenPage() {
 
       {/* Columns */}
       {!isLoading && orders.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 p-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 sm:p-5">
           {(Object.keys(cols) as ActiveStatus[]).map(status => {
             const meta = COL_META[status];
             return (

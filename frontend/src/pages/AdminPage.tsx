@@ -23,7 +23,7 @@ function StatCard({ label, value, icon, sub, accent }: { label: string; value: s
         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: 'var(--accent-soft)' }}>{icon}</div>
         {sub && <span className="text-xs font-medium px-2 py-1 rounded-lg" style={{ background: 'var(--surface-2)', color: 'var(--text-3)' }}>{sub}</span>}
       </div>
-      <p className="text-3xl font-black" style={{ color: 'var(--text)' }}>{value}</p>
+      <p className="font-black truncate" style={{ color: 'var(--text)', fontSize: 'clamp(1.1rem, 4vw, 1.875rem)' }}>{value}</p>
       <p className="text-sm" style={{ color: 'var(--text-2)' }}>{label}</p>
     </div>
   );
@@ -254,32 +254,33 @@ export default function AdminPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <header className="sticky top-0 z-10" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">📊</span>
-            <span className="font-black text-xl tracking-tight" style={{ color: 'var(--text)' }}>Admin</span>
+            <span className="text-xl sm:text-2xl">📊</span>
+            <span className="font-black text-lg sm:text-xl tracking-tight" style={{ color: 'var(--text)' }}>Admin</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-xs" style={{ color: 'var(--text-3)' }}>Live</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
+              <span className="text-xs hidden sm:inline" style={{ color: 'var(--text-3)' }}>Live</span>
             </div>
             <DarkModeToggle />
             <button
               onClick={() => logout()}
-              className="text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:scale-105"
+              className="text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-xl transition-all hover:scale-105"
               style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}
             >
-              Sign Out
+              <span className="hidden sm:inline">Sign Out</span>
+              <span className="sm:hidden">↩</span>
             </button>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="max-w-6xl mx-auto px-4 pb-0 flex gap-1">
+        <div className="max-w-6xl mx-auto px-4 pb-0 flex gap-1 overflow-x-auto" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
           {tabs.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className="px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-all"
+              className="flex-shrink-0 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-t-xl transition-all"
               style={activeTab === t.id
                 ? { background: 'var(--bg)', color: 'var(--accent)', borderBottom: '2px solid var(--accent)' }
                 : { color: 'var(--text-2)' }
@@ -437,9 +438,9 @@ export default function AdminPage() {
                   };
                   const sc = statusColors[order.status];
                   return (
-                    <div key={order.id} className="flex items-center gap-4 px-4 py-3 transition-all hover:bg-[var(--surface-2)]"
+                    <div key={order.id} className="flex items-start sm:items-center gap-3 px-4 py-3 transition-all hover:bg-[var(--surface-2)]"
                       style={{ borderBottom: i < allOrders.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                      <span className="text-lg font-black w-12 flex-shrink-0" style={{ color: 'var(--text)' }}>#{order.orderNumber}</span>
+                      <span className="text-base font-black w-10 flex-shrink-0 pt-0.5 sm:pt-0" style={{ color: 'var(--text)' }}>#{order.orderNumber}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>
                           {order.items.map(i => `${i.menuItem.name} ×${i.quantity}`).join(', ')}
@@ -449,9 +450,9 @@ export default function AdminPage() {
                           {order.notes && <span className="ml-2 italic">· {order.notes}</span>}
                         </p>
                       </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>₦{order.total.toFixed(2)}</span>
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-xl" style={{ background: sc.bg, color: sc.text }}>
+                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-3 flex-shrink-0">
+                        <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>₦{order.total.toLocaleString('en-NG', { minimumFractionDigits: 0 })}</span>
+                        <span className="text-xs font-bold px-2 py-1 rounded-xl" style={{ background: sc.bg, color: sc.text }}>
                           {order.status}
                         </span>
                       </div>

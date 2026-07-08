@@ -199,8 +199,8 @@ export default function MenuPage() {
           <div className="flex items-center gap-2">
             <DarkModeToggle />
             {savedOrders.length > 0 && (
-              <button onClick={() => setHistoryOpen(true)} className="btn btn-ghost text-sm" style={{ padding: '8px 14px' }}>
-                📋 My Orders
+              <button onClick={() => setHistoryOpen(true)} className="btn btn-ghost text-sm" style={{ padding: '8px 12px' }}>
+                📋 <span className="hidden sm:inline">My Orders</span>
               </button>
             )}
             <button onClick={() => setCartOpen(true)} className="btn btn-primary relative text-sm" style={{ padding: '8px 16px' }}>
