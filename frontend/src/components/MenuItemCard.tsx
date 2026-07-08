@@ -1,14 +1,20 @@
 import { useCartStore } from '../stores/cartStore';
 import type { MenuItem } from '../types';
 
-export default function MenuItemCard({ item }: { item: MenuItem }) {
+interface Props {
+  item: MenuItem;
+  onViewDetails: (item: MenuItem) => void;
+}
+
+export default function MenuItemCard({ item, onViewDetails }: Props) {
   const { items, addItem, updateQuantity } = useCartStore();
   const cartItem = items.find(i => i.menuItem.id === item.id);
   const qty = cartItem?.quantity ?? 0;
 
   return (
     <div
-      className={`card card-lift flex flex-col overflow-hidden transition-all duration-200 ${!item.available ? 'opacity-60' : ''}`}
+      className={`card card-lift flex flex-col overflow-hidden transition-all duration-200 cursor-pointer ${!item.available ? 'opacity-60' : ''}`}
+      onClick={() => onViewDetails(item)}
     >
       <div className="relative">
         <img
@@ -17,6 +23,13 @@ export default function MenuItemCard({ item }: { item: MenuItem }) {
           className="w-full h-44 object-cover"
           onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x176?text=🍽️'; }}
         />
+        {/* View details hint */}
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100">
+          <span className="text-xs font-bold px-2 py-1 rounded-lg"
+            style={{ background: 'rgba(0,0,0,0.5)', color: '#fff', backdropFilter: 'blur(4px)' }}>
+            View
+          </span>
+        </div>
         {!item.available && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <span className="badge" style={{ background: '#1a1a1a', color: '#fff', fontSize: '13px', padding: '6px 14px' }}>
@@ -34,16 +47,22 @@ export default function MenuItemCard({ item }: { item: MenuItem }) {
         <p className="text-sm flex-1 mb-4 line-clamp-2" style={{ color: 'var(--text-2)' }}>{item.description}</p>
 
         <div className="flex items-center justify-between mt-auto">
-          <span className="text-xl font-black" style={{ color: 'var(--text)' }}>₦{item.price.toFixed(2)}</span>
+          <span className="text-xl font-black" style={{ color: 'var(--text)' }}>
+            ₦{item.price.toLocaleString('en-NG', { minimumFractionDigits: 0 })}
+          </span>
 
           {!item.available ? (
             <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Unavailable</span>
           ) : qty === 0 ? (
-            <button onClick={() => addItem(item)} className="btn btn-primary text-sm" style={{ borderRadius: '10px', padding: '8px 18px' }}>
+            <button
+              onClick={e => { e.stopPropagation(); addItem(item); }}
+              className="btn btn-primary text-sm"
+              style={{ borderRadius: '10px', padding: '8px 18px' }}
+            >
               Add
             </button>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
               <button
                 onClick={() => updateQuantity(item.id, qty - 1)}
                 className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition-all hover:scale-110"

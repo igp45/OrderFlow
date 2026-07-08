@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { menuApi } from '../lib/api';
 import { useCartStore } from '../stores/cartStore';
 import MenuItemCard from '../components/MenuItemCard';
+import MenuItemModal from '../components/MenuItemModal';
 import CartDrawer from '../components/CartDrawer';
 import DarkModeToggle from '../components/DarkModeToggle';
 import type { MenuItem } from '../types';
@@ -63,24 +64,32 @@ function HeroSection() {
         backgroundSize: '26px 26px',
       }} />
 
-      {/* Floating food emojis — right side only */}
-      {[
-        { e: '🍕', top: '6%',  right: '3%',  size: 36, delay: 0 },
-        { e: '🍔', top: '54%', right: '16%', size: 30, delay: 0.6 },
-        { e: '🍗', top: '16%', right: '24%', size: 26, delay: 1.1 },
-        { e: '🍟', top: '70%', right: '4%',  size: 28, delay: 0.3 },
-        { e: '🥤', top: '36%', right: '34%', size: 22, delay: 0.9 },
-      ].map(({ e, top, right, size, delay }, i) => (
-        <div key={i} className="absolute pointer-events-none select-none hidden sm:block"
-          style={{
-            top, right, fontSize: size, lineHeight: 1,
-            animation: `float ${3.5 + i * 0.4}s ease-in-out ${delay}s infinite`,
-            opacity: 0.85,
-            filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.2))',
-          }}>
-          {e}
+      {/* Real meal photo — right side, hidden on mobile */}
+      <div className="absolute hidden sm:block pointer-events-none select-none"
+        style={{ right: '5%', top: '50%', transform: 'translateY(-50%)', animation: 'float 5s ease-in-out infinite' }}>
+        <div style={{
+          width: 150, height: 150,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          border: '4px solid rgba(255,255,255,0.3)',
+          boxShadow: '0 0 0 8px rgba(255,255,255,0.08), 0 20px 60px rgba(0,0,0,0.35)',
+        }}>
+          <img
+            src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300"
+            alt="Classic Cheeseburger"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
         </div>
-      ))}
+        <div style={{
+          position: 'absolute', bottom: -10, right: -10,
+          background: 'white', borderRadius: 99, padding: '4px 12px',
+          fontSize: 11, fontWeight: 700, color: '#1A1917',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          whiteSpace: 'nowrap',
+        }}>
+          🔥 Most Popular
+        </div>
+      </div>
 
       {/* Content */}
       <div className="max-w-5xl mx-auto px-4 pt-7 pb-12 relative">
@@ -165,6 +174,7 @@ function HeroSection() {
 export default function MenuPage() {
   const [cartOpen, setCartOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [savedOrders, setSavedOrders] = useState<SavedOrder[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const itemCount = useCartStore(s => s.itemCount());
@@ -263,12 +273,13 @@ export default function MenuPage() {
               <span className="text-sm font-normal" style={{ color: 'var(--text-3)' }}>({grouped[category].length})</span>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {grouped[category].map(item => <MenuItemCard key={item.id} item={item} />)}
+              {grouped[category].map(item => <MenuItemCard key={item.id} item={item} onViewDetails={setSelectedItem} />)}
             </div>
           </section>
         ))}
       </main>
 
+      <MenuItemModal item={selectedItem} onClose={() => setSelectedItem(null)} />
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
 
       {/* Order History Panel */}
