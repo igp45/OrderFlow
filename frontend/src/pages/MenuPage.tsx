@@ -133,33 +133,47 @@ function HeroSection() {
         </div>
 
         {/* ── Right: burger photo ── */}
-        <div className="flex-shrink-0 flex items-center justify-center py-8"
-          style={{ width: 'clamp(150px, 34vw, 290px)' }}>
-          <div style={{ position: 'relative', animation: 'float 5s ease-in-out infinite', width: '100%' }}>
+        <div className="flex-shrink-0 flex items-center justify-center py-8">
+          {/* Wrapper matches the circle exactly so glow/ring align perfectly */}
+          <div style={{
+            position: 'relative',
+            width: 'clamp(150px, 34vw, 280px)',
+            height: 'clamp(150px, 34vw, 280px)',
+            flexShrink: 0,
+            animation: 'float 5s ease-in-out infinite',
+          }}>
 
-            {/* Outer warm glow */}
+            {/* Outer warm glow — centred on the circle */}
             <div style={{
-              position: 'absolute', inset: -24,
+              position: 'absolute',
+              top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 'calc(100% + 48px)',
+              height: 'calc(100% + 48px)',
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(255,180,50,0.35) 0%, rgba(249,115,22,0.15) 45%, transparent 72%)',
-              filter: 'blur(2px)',
+              background: 'radial-gradient(circle, rgba(255,180,50,0.38) 0%, rgba(249,115,22,0.14) 45%, transparent 72%)',
+              filter: 'blur(4px)',
             }} />
 
-            {/* Pulsing ring */}
+            {/* Outer ring — sits just outside the border */}
             <div style={{
-              position: 'absolute', inset: -10,
+              position: 'absolute',
+              top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 'calc(100% + 20px)',
+              height: 'calc(100% + 20px)',
               borderRadius: '50%',
-              border: '3px solid rgba(255,255,255,0.2)',
+              border: '2px solid rgba(255,255,255,0.22)',
             }} />
 
-            {/* Photo circle */}
+            {/* Photo circle — fills the wrapper exactly */}
             <div style={{
-              width: 'clamp(150px, 34vw, 280px)',
-              height: 'clamp(150px, 34vw, 280px)',
+              width: '100%',
+              height: '100%',
               borderRadius: '50%',
               overflow: 'hidden',
-              border: '6px solid rgba(255,255,255,0.6)',
-              boxShadow: '0 0 0 3px rgba(255,255,255,0.18), 0 28px 80px rgba(0,0,0,0.55)',
+              border: '6px solid rgba(255,255,255,0.65)',
+              boxShadow: '0 0 0 3px rgba(255,255,255,0.2), 0 28px 80px rgba(0,0,0,0.55)',
               position: 'relative',
             }}>
               <img
