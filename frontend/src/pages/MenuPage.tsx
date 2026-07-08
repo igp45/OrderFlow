@@ -64,7 +64,7 @@ function HeroSection() {
 
       {/* Two-column layout */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 relative flex items-center gap-6"
-        style={{ minHeight: 'clamp(240px, 38vw, 320px)' }}>
+        style={{ minHeight: 'clamp(270px, 42vw, 370px)' }}>
 
         {/* ── Left: text content ── */}
         <div className="flex-1 py-8 sm:py-10 min-w-0">
@@ -133,64 +133,40 @@ function HeroSection() {
         </div>
 
         {/* ── Right: burger photo ── */}
-        <div className="flex-shrink-0 flex items-center justify-center py-6"
-          style={{ width: 'clamp(130px, 28vw, 240px)' }}>
-          <div style={{ position: 'relative', animation: 'float 5s ease-in-out infinite' }}>
+        <div className="flex-shrink-0 flex items-center justify-center py-8"
+          style={{ width: 'clamp(150px, 34vw, 290px)' }}>
+          <div style={{ position: 'relative', animation: 'float 5s ease-in-out infinite', width: '100%' }}>
 
-            {/* Outer glow ring */}
+            {/* Outer warm glow */}
             <div style={{
-              position: 'absolute', inset: -16,
+              position: 'absolute', inset: -24,
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(255,200,80,0.28) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(255,180,50,0.35) 0%, rgba(249,115,22,0.15) 45%, transparent 72%)',
+              filter: 'blur(2px)',
             }} />
 
-            {/* Decorative outer ring */}
+            {/* Pulsing ring */}
             <div style={{
-              position: 'absolute', inset: -6,
+              position: 'absolute', inset: -10,
               borderRadius: '50%',
-              border: '2px dashed rgba(255,255,255,0.25)',
+              border: '3px solid rgba(255,255,255,0.2)',
             }} />
 
             {/* Photo circle */}
             <div style={{
-              width: 'clamp(130px, 28vw, 220px)',
-              height: 'clamp(130px, 28vw, 220px)',
+              width: 'clamp(150px, 34vw, 280px)',
+              height: 'clamp(150px, 34vw, 280px)',
               borderRadius: '50%',
               overflow: 'hidden',
-              border: '5px solid rgba(255,255,255,0.5)',
-              boxShadow: '0 0 0 2px rgba(255,255,255,0.15), 0 24px 64px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.1)',
+              border: '6px solid rgba(255,255,255,0.6)',
+              boxShadow: '0 0 0 3px rgba(255,255,255,0.18), 0 28px 80px rgba(0,0,0,0.55)',
               position: 'relative',
             }}>
               <img
-                src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=90"
+                src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=95"
                 alt="Classic Cheeseburger"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
-            </div>
-
-            {/* "Most Popular" badge */}
-            <div style={{
-              position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%)',
-              background: '#fff',
-              borderRadius: 99, padding: '5px 14px',
-              fontSize: 11, fontWeight: 800, color: '#1A1917',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-              whiteSpace: 'nowrap',
-              letterSpacing: '0.02em',
-            }}>
-              🔥 Most Popular
-            </div>
-
-            {/* Price tag */}
-            <div style={{
-              position: 'absolute', top: 4, right: -8,
-              background: 'var(--accent)',
-              borderRadius: 99, padding: '4px 10px',
-              fontSize: 11, fontWeight: 800, color: '#fff',
-              boxShadow: '0 4px 12px rgba(249,115,22,0.5)',
-              whiteSpace: 'nowrap',
-            }}>
-              ₦7,500
             </div>
           </div>
         </div>
