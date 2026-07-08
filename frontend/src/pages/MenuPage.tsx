@@ -82,11 +82,109 @@ export default function MenuPage() {
       </header>
 
       {/* Hero */}
-      <div className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #F97316 0%, #EA580C 50%, #C2410C 100%)' }}>
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
-        <div className="max-w-5xl mx-auto px-4 py-10 relative">
-          <h1 className="text-4xl font-black text-white mb-2 tracking-tight">What are you craving? 🔥</h1>
-          <p className="text-orange-100 text-base">Fresh food, made to order — ready in minutes</p>
+      <div className="relative overflow-hidden" style={{ minHeight: 260 }}>
+        {/* Animated gradient background */}
+        <div className="absolute inset-0" style={{
+          background: 'linear-gradient(135deg, #F97316, #EA580C, #B91C1C, #9A3412, #F97316)',
+          backgroundSize: '300% 300%',
+          animation: 'hero-gradient 9s ease infinite',
+        }} />
+
+        {/* Radial glow */}
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at 80% 50%, rgba(255,200,100,0.18) 0%, transparent 65%)',
+        }} />
+
+        {/* Dot overlay */}
+        <div className="absolute inset-0 opacity-[0.07]" style={{
+          backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }} />
+
+        {/* Floating food emojis */}
+        {[
+          { e: '🍕', top: '8%',  right: '4%',  size: 42, delay: 0 },
+          { e: '🍔', top: '55%', right: '18%', size: 36, delay: 0.6 },
+          { e: '🍗', top: '18%', right: '28%', size: 32, delay: 1.1 },
+          { e: '🍟', top: '72%', right: '5%',  size: 34, delay: 0.3 },
+          { e: '🥤', top: '38%', right: '38%', size: 28, delay: 0.9 },
+          { e: '🍰', top: '6%',  right: '44%', size: 30, delay: 1.4 },
+          { e: '🥗', top: '80%', right: '32%', size: 28, delay: 0.5 },
+        ].map(({ e, top, right, size, delay }, i) => (
+          <div key={i} className="absolute pointer-events-none select-none hidden sm:block"
+            style={{
+              top, right,
+              fontSize: size,
+              lineHeight: 1,
+              animation: `float ${3.5 + i * 0.4}s ease-in-out ${delay}s infinite`,
+              opacity: 0.88,
+              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
+            }}>
+            {e}
+          </div>
+        ))}
+
+        {/* Hero content */}
+        <div className="max-w-5xl mx-auto px-4 pt-10 pb-16 relative">
+          {/* Badge */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
+            borderRadius: 99, padding: '6px 14px', marginBottom: 16,
+            animation: 'slide-up 0.5s ease 0.05s both',
+            border: '1px solid rgba(255,255,255,0.2)',
+          }}>
+            <span style={{ color: 'rgba(255,255,255,0.95)', fontSize: 12, fontWeight: 700, letterSpacing: '0.04em' }}>
+              🔥 FRESH & MADE TO ORDER
+            </span>
+          </div>
+
+          <h1 className="font-black text-white leading-tight" style={{
+            fontSize: 'clamp(2rem, 5vw, 3.25rem)',
+            marginBottom: 12,
+            animation: 'slide-up 0.55s ease 0.15s both',
+            textShadow: '0 2px 24px rgba(0,0,0,0.2)',
+            maxWidth: 480,
+          }}>
+            What are you<br />craving today?
+          </h1>
+
+          <p style={{
+            color: 'rgba(255,255,255,0.82)',
+            fontSize: 16,
+            marginBottom: 24,
+            animation: 'slide-up 0.55s ease 0.25s both',
+            maxWidth: 340,
+            lineHeight: 1.6,
+          }}>
+            Order your favourites in seconds — hot, fresh, and ready for pickup
+          </p>
+
+          {/* Stat pills */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, animation: 'slide-up 0.55s ease 0.35s both' }}>
+            {[
+              { icon: '🍽️', label: '24+ Items' },
+              { icon: '⚡', label: 'Ready Fast' },
+              { icon: '🟢', label: 'Open Now' },
+            ].map(({ icon, label }) => (
+              <div key={label} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)',
+                borderRadius: 99, padding: '7px 16px',
+                color: 'white', fontSize: 13, fontWeight: 600,
+                border: '1px solid rgba(255,255,255,0.15)',
+              }}>
+                {icon} {label}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Wave cut at the bottom */}
+        <div className="absolute bottom-0 left-0 right-0" style={{ lineHeight: 0 }}>
+          <svg viewBox="0 0 1440 52" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', width: '100%' }}>
+            <path d="M0 52L1440 52L1440 0C1200 44 840 52 720 36C540 18 180 0 0 22L0 52Z" fill="var(--bg)" />
+          </svg>
         </div>
       </div>
 

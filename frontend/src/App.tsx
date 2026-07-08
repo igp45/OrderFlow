@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import MenuPage from './pages/MenuPage';
@@ -8,7 +8,30 @@ import KitchenPage from './pages/KitchenPage';
 import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import SplashScreen from './components/SplashScreen';
 import { initTheme, useThemeStore } from './stores/themeStore';
+
+const CUSTOMER_PATHS = ['/', '/order'];
+
+function SplashGate({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const isCustomerRoute = CUSTOMER_PATHS.some(p => location.pathname === p || location.pathname.startsWith('/order/'));
+  const [done, setDone] = useState(() => {
+    return !isCustomerRoute || sessionStorage.getItem('of_splashed') === '1';
+  });
+
+  const handleDone = () => {
+    sessionStorage.setItem('of_splashed', '1');
+    setDone(true);
+  };
+
+  return (
+    <>
+      {!done && <SplashScreen onDone={handleDone} />}
+      <div style={{ visibility: done ? 'visible' : 'hidden' }}>{children}</div>
+    </>
+  );
+}
 
 initTheme();
 
@@ -26,6 +49,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <SplashGate>
         <Routes>
           <Route path="/" element={<MenuPage />} />
           <Route path="/order/:id" element={<OrderTrackerPage />} />
@@ -47,6 +71,7 @@ export default function App() {
             }
           />
         </Routes>
+        </SplashGate>
       </BrowserRouter>
       <Toaster
         position="top-right"

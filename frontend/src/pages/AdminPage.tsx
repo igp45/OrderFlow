@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { QRCodeCanvas } from 'qrcode.react';
 import toast from 'react-hot-toast';
@@ -170,6 +172,77 @@ export default function AdminPage() {
     { time: 'Now', value: stats.revenueToday },
   ] : [];
 
+  function downloadOrdersPDF() {
+    if (!allOrders.length) { toast.error('No orders to export'); return; }
+    const doc = new jsPDF();
+    const today = new Date().toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const totalRevenue = allOrders.reduce((s, o) => s + o.total, 0);
+    const completed = allOrders.filter(o => o.status === 'COMPLETED').length;
+
+    // Header bar
+    doc.setFillColor(249, 115, 22);
+    doc.rect(0, 0, 210, 38, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('OrderFlow', 14, 18);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Daily Orders Report', 14, 28);
+    doc.text(today, 196, 18, { align: 'right' });
+
+    // Summary
+    doc.setTextColor(26, 25, 23);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Summary', 14, 52);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Total Orders: ${allOrders.length}`, 14, 62);
+    doc.text(`Completed: ${completed}`, 85, 62);
+    doc.text(`Pending / In-Progress: ${allOrders.length - completed}`, 14, 70);
+    doc.text(`Total Revenue: ₦${totalRevenue.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`, 85, 70);
+
+    autoTable(doc, {
+      startY: 82,
+      head: [['Order #', 'Time', 'Items', 'Notes', 'Total (₦)', 'Status']],
+      body: allOrders.map(o => [
+        `#${o.orderNumber}`,
+        new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        o.items.map(i => `${i.menuItem.name} x${i.quantity}`).join(', '),
+        o.notes || '—',
+        o.total.toLocaleString('en-NG', { minimumFractionDigits: 2 }),
+        o.status,
+      ]),
+      headStyles: { fillColor: [249, 115, 22], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+      bodyStyles: { fontSize: 8.5, textColor: [26, 25, 23] },
+      alternateRowStyles: { fillColor: [249, 248, 246] },
+      columnStyles: {
+        0: { cellWidth: 16 },
+        1: { cellWidth: 16 },
+        2: { cellWidth: 72 },
+        3: { cellWidth: 32 },
+        4: { cellWidth: 26 },
+        5: { cellWidth: 24 },
+      },
+      margin: { left: 14, right: 14 },
+    });
+
+    const pages = doc.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(160);
+      doc.text(
+        `OrderFlow · Generated ${new Date().toLocaleString()} · Page ${i} of ${pages}`,
+        105, 290, { align: 'center' }
+      );
+    }
+
+    doc.save(`orderflow-orders-${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast.success('PDF downloaded!');
+  }
+
   const tabs = [
     { id: 'overview' as const, label: '📊 Overview' },
     { id: 'orders' as const, label: '🧾 Orders' },
@@ -322,7 +395,15 @@ export default function AdminPage() {
               <h2 className="font-bold text-lg" style={{ color: 'var(--text)' }}>
                 Today's Orders {!ordersLoading && <span style={{ color: 'var(--text-3)', fontWeight: 400, fontSize: '14px' }}>({allOrders.length})</span>}
               </h2>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap items-center">
+                <button
+                  onClick={downloadOrdersPDF}
+                  disabled={ordersLoading || allOrders.length === 0}
+                  className="text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
+                  style={{ background: 'rgba(16,185,129,0.1)', color: '#10B981', border: '1px solid rgba(16,185,129,0.25)' }}
+                >
+                  ⬇ Export PDF
+                </button>
                 {['', 'PENDING', 'PREPARING', 'READY', 'COMPLETED'].map(s => (
                   <button key={s} onClick={() => setOrderStatusFilter(s)}
                     className="text-xs font-semibold px-3 py-1.5 rounded-xl transition-all"
