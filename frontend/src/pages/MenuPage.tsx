@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { menuApi, settingsApi, warmUp } from '../lib/api';
+import { api, menuApi, settingsApi } from '../lib/api';
 import { useCartStore } from '../stores/cartStore';
 import MenuItemCard from '../components/MenuItemCard';
 import MenuItemModal from '../components/MenuItemModal';
@@ -204,31 +204,53 @@ export default function MenuPage() {
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const itemCount = useCartStore(s => s.itemCount());
 
-  const [slowLoad, setSlowLoad] = useState(false);
+  const [backendReady, setBackendReady] = useState(false);
+  const [waitSecs, setWaitSecs] = useState(0);
+  const [gaveUp, setGaveUp] = useState(false);
+
+  // Poll /health every 3s until the backend wakes up, then enable queries
+  useEffect(() => {
+    setSavedOrders(JSON.parse(localStorage.getItem('of_orders') || '[]'));
+    let cancelled = false;
+    let elapsed = 0;
+
+    const ticker = setInterval(() => {
+      if (cancelled) return;
+      elapsed += 1;
+      setWaitSecs(elapsed);
+      if (elapsed >= 90) { setGaveUp(true); clearInterval(ticker); cancelled = true; }
+    }, 1000);
+
+    const poll = async () => {
+      while (!cancelled) {
+        try {
+          await api.get('/health', { timeout: 8000 });
+          if (!cancelled) { setBackendReady(true); clearInterval(ticker); cancelled = true; }
+          return;
+        } catch {
+          await new Promise(r => setTimeout(r, 3000));
+        }
+      }
+    };
+    poll();
+    return () => { cancelled = true; clearInterval(ticker); };
+  }, []);
 
   const { data: status } = useQuery({
     queryKey: ['settings-status'],
     queryFn: settingsApi.getStatus,
+    enabled: backendReady,
     staleTime: 60000,
   });
 
   const { data: menuItems = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['menu'],
     queryFn: menuApi.getAll,
-    retry: 3,
-    retryDelay: 5000,
+    enabled: backendReady,
+    retry: 2,
+    retryDelay: 2000,
+    staleTime: 2 * 60 * 1000,
   });
-
-  useEffect(() => {
-    warmUp();
-    setSavedOrders(JSON.parse(localStorage.getItem('of_orders') || '[]'));
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading) { setSlowLoad(false); return; }
-    const t = setTimeout(() => setSlowLoad(true), 5000);
-    return () => clearTimeout(t);
-  }, [isLoading]);
 
   const categories = ['All', ...Array.from(new Set(menuItems.map(i => i.category))).sort()];
   const filtered = activeCategory === 'All' ? menuItems : menuItems.filter(i => i.category === activeCategory);
@@ -293,29 +315,36 @@ export default function MenuPage() {
 
       {/* Content */}
       <main className="max-w-5xl mx-auto px-4 py-8">
-        {isLoading && (
+        {/* Waiting for backend to wake up OR menu fetching */}
+        {(!backendReady || isLoading) && !gaveUp && (
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
-            {slowLoad && (
+            {waitSecs >= 5 && (
               <div className="text-center mt-8 flex flex-col items-center gap-2">
                 <div className="w-6 h-6 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
                 <p className="text-sm font-medium" style={{ color: 'var(--text-2)' }}>
-                  Waking up our kitchen, please wait…
+                  Waking up our kitchen… ({waitSecs}s)
+                </p>
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                  First load after inactivity takes up to 60 seconds
                 </p>
               </div>
             )}
           </div>
         )}
 
-        {isError && (
+        {/* Gave up after 90s or query error */}
+        {(gaveUp || isError) && (
           <div className="text-center py-24 flex flex-col items-center gap-3">
             <p className="text-4xl">😕</p>
-            <p className="font-semibold" style={{ color: 'var(--text)' }}>Failed to load menu</p>
-            <p className="text-sm" style={{ color: 'var(--text-2)' }}>The server may be waking up — please try again</p>
+            <p className="font-semibold" style={{ color: 'var(--text)' }}>
+              {gaveUp ? 'Server is taking too long' : 'Failed to load menu'}
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-2)' }}>Please check your connection and try again</p>
             <button
-              onClick={() => refetch()}
+              onClick={() => { setGaveUp(false); setWaitSecs(0); setBackendReady(false); refetch(); }}
               className="btn btn-primary mt-2"
               style={{ padding: '10px 24px', borderRadius: '12px' }}
             >
