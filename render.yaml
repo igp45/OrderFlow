@@ -3,7 +3,7 @@ services:
     name: orderflow-backend
     runtime: node
     rootDir: backend
-    buildCommand: npm install --include=dev && npm run build && npm run db:push && npm run db:seed
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
