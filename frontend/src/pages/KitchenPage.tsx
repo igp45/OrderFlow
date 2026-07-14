@@ -107,10 +107,12 @@ export default function KitchenPage() {
   // ✅ Load active orders from API on mount — persists across navigation
   useEffect(() => { warmUp(); }, []);
 
-  const { data: orders = [], isLoading } = useQuery<Order[]>({
+  const { data: orders = [], isLoading, isError, refetch } = useQuery<Order[]>({
     queryKey: ['kitchen-orders'],
     queryFn: ordersApi.getActive,
     staleTime: 0,
+    retry: 2,
+    retryDelay: 3000,
   });
 
   const { mutate: advance } = useMutation({
@@ -213,8 +215,20 @@ export default function KitchenPage() {
         </div>
       )}
 
+      {/* Error */}
+      {isError && !isLoading && (
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
+          <span className="text-5xl">⚠️</span>
+          <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>Couldn't load orders</p>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>Check your connection and try again</p>
+          <button onClick={() => refetch()} className="btn btn-primary" style={{ borderRadius: '12px', padding: '10px 28px' }}>
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Empty state */}
-      {!isLoading && orders.length === 0 && (
+      {!isLoading && !isError && orders.length === 0 && (
         <div className="flex flex-col items-center justify-center py-40 gap-4">
           <span className="text-7xl">🍳</span>
           <p className="text-xl font-bold" style={{ color: 'var(--text)' }}>All caught up!</p>
@@ -223,7 +237,7 @@ export default function KitchenPage() {
       )}
 
       {/* Columns */}
-      {!isLoading && orders.length > 0 && (
+      {!isLoading && !isError && orders.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 sm:p-5">
           {(Object.keys(cols) as ActiveStatus[]).map(status => {
             const meta = COL_META[status];

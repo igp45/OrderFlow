@@ -13,7 +13,8 @@ export default function ProtectedRoute({ allowedRoles, children }: Props) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['auth'],
     queryFn: authApi.me,
-    retry: false,
+    retry: 2,
+    retryDelay: 2000,
     staleTime: Infinity,
   });
 
