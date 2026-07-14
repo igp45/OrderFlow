@@ -119,7 +119,7 @@ export default function OrderTrackerPage() {
           <div className="flex items-center gap-3">
             <Link to="/" className="w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:scale-110" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-2)' }}>←</Link>
             <div className="flex items-center gap-2">
-              <span className="text-xl">🍽️</span>
+              <img src="/logo.png" alt="OrderFlow" className="w-7 h-7 rounded-lg object-contain" />
               <span className="font-black text-lg tracking-tight" style={{ color: 'var(--text)' }}>OrderFlow</span>
             </div>
           </div>

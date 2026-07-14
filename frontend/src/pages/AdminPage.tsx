@@ -6,7 +6,7 @@ import autoTable from 'jspdf-autotable';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { QRCodeCanvas } from 'qrcode.react';
 import toast from 'react-hot-toast';
-import { dashboardApi, aiApi, menuApi, ordersApi, authApi, settingsApi } from '../lib/api';
+import { dashboardApi, aiApi, menuApi, ordersApi, authApi, settingsApi, warmUp } from '../lib/api';
 import type { PaymentDetails } from '../lib/api';
 import socket from '../lib/socket';
 import DarkModeToggle from '../components/DarkModeToggle';
@@ -60,6 +60,8 @@ export default function AdminPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [prediction, setPrediction] = useState<Record<string, number> | null>(null);
+
+  useEffect(() => { warmUp(); }, []);
 
   const { mutate: logout } = useMutation({
     mutationFn: authApi.logout,

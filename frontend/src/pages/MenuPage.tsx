@@ -62,12 +62,12 @@ function HeroSection({ isOpen }: { isOpen: boolean }) {
         backgroundSize: '26px 26px',
       }} />
 
-      {/* Two-column layout */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative flex items-center gap-6"
+      {/* Layout: stacked on mobile, side-by-side on sm+ */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative flex flex-col sm:flex-row items-center gap-2 sm:gap-6"
         style={{ minHeight: 'clamp(270px, 42vw, 370px)' }}>
 
-        {/* ── Left: text content ── */}
-        <div className="flex-1 py-8 sm:py-10 min-w-0">
+        {/* ── Text content ── */}
+        <div className="flex-1 pt-6 pb-2 sm:py-10 min-w-0 w-full">
           {/* Badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -132,13 +132,13 @@ function HeroSection({ isOpen }: { isOpen: boolean }) {
           </div>
         </div>
 
-        {/* ── Right: burger photo ── */}
-        <div className="flex-shrink-0 flex items-center justify-center py-8">
-          {/* Wrapper matches the circle exactly so glow/ring align perfectly */}
+        {/* ── Burger photo ── */}
+        <div className="flex-shrink-0 flex items-center justify-center pb-6 sm:py-8">
+          {/* Wrapper size: smaller on mobile (stacked), larger on sm+ (side-by-side) */}
           <div style={{
             position: 'relative',
-            width: 'clamp(150px, 34vw, 280px)',
-            height: 'clamp(150px, 34vw, 280px)',
+            width: 'clamp(120px, 40vw, 280px)',
+            height: 'clamp(120px, 40vw, 280px)',
             flexShrink: 0,
             animation: 'float 5s ease-in-out infinite',
           }}>
@@ -166,14 +166,14 @@ function HeroSection({ isOpen }: { isOpen: boolean }) {
               border: '2px solid rgba(255,255,255,0.22)',
             }} />
 
-            {/* Photo circle — fills the wrapper exactly */}
+            {/* Photo circle */}
             <div style={{
               width: '100%',
               height: '100%',
               borderRadius: '50%',
               overflow: 'hidden',
-              border: '6px solid rgba(255,255,255,0.65)',
-              boxShadow: '0 0 0 3px rgba(255,255,255,0.2), 0 28px 80px rgba(0,0,0,0.55)',
+              border: '5px solid rgba(255,255,255,0.65)',
+              boxShadow: '0 0 0 3px rgba(255,255,255,0.2), 0 20px 60px rgba(0,0,0,0.55)',
               position: 'relative',
             }}>
               <img

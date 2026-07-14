@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { ordersApi, authApi } from '../lib/api';
+import { ordersApi, authApi, warmUp } from '../lib/api';
 import socket from '../lib/socket';
 import DarkModeToggle from '../components/DarkModeToggle';
 import type { Order, OrderStatus } from '../types';
@@ -105,6 +105,8 @@ export default function KitchenPage() {
   });
 
   // ✅ Load active orders from API on mount — persists across navigation
+  useEffect(() => { warmUp(); }, []);
+
   const { data: orders = [], isLoading } = useQuery<Order[]>({
     queryKey: ['kitchen-orders'],
     queryFn: ordersApi.getActive,
