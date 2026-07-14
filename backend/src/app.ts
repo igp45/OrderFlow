@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.routes';
 import settingsRoutes from './routes/settings.routes';
 import { requireAuth } from './middleware/auth.middleware';
 import { errorHandler } from './middleware/error.middleware';
+import prisma from './prisma/client';
 
 dotenv.config();
 
@@ -30,8 +31,13 @@ app.use('/orders', orderRoutes);
 app.use('/dashboard', requireAuth('admin'), dashboardRoutes);
 app.use('/ai', requireAuth('admin'), aiRoutes);
 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: 'ok', db: 'connected', timestamp: new Date().toISOString() });
+  } catch (err) {
+    res.status(503).json({ status: 'error', db: 'disconnected', error: String(err) });
+  }
 });
 
 app.use(errorHandler);
