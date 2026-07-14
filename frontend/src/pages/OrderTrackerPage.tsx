@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { ordersApi, settingsApi } from '../lib/api';
+import { ordersApi, settingsApi, warmUp } from '../lib/api';
 import socket from '../lib/socket';
 import DarkModeToggle from '../components/DarkModeToggle';
 import type { Order, OrderStatus } from '../types';
@@ -56,10 +56,14 @@ export default function OrderTrackerPage() {
   const queryClient = useQueryClient();
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const { data: order, isLoading, isError } = useQuery({
+  useEffect(() => { warmUp(); }, []);
+
+  const { data: order, isLoading, isError, refetch } = useQuery({
     queryKey: ['order', id],
     queryFn: () => ordersApi.getById(id!),
     enabled: !!id,
+    retry: 3,
+    retryDelay: 5000,
   });
 
   const { data: payment } = useQuery({
@@ -95,8 +99,12 @@ export default function OrderTrackerPage() {
   if (isError || !order) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: 'var(--bg)' }}>
       <p className="text-4xl">😕</p>
-      <p className="font-semibold" style={{ color: 'var(--text)' }}>Order not found</p>
-      <Link to="/" className="btn btn-primary">Back to menu</Link>
+      <p className="font-semibold" style={{ color: 'var(--text)' }}>Couldn't load your order</p>
+      <p className="text-sm" style={{ color: 'var(--text-2)' }}>The server may be waking up — please try again</p>
+      <div className="flex gap-3">
+        <button onClick={() => refetch()} className="btn btn-primary" style={{ borderRadius: '12px' }}>Try Again</button>
+        <Link to="/" className="btn btn-ghost" style={{ borderRadius: '12px' }}>Back to menu</Link>
+      </div>
     </div>
   );
 

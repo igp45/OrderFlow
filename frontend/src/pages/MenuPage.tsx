@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { menuApi, warmUp } from '../lib/api';
+import { menuApi, settingsApi, warmUp } from '../lib/api';
 import { useCartStore } from '../stores/cartStore';
 import MenuItemCard from '../components/MenuItemCard';
 import MenuItemModal from '../components/MenuItemModal';
@@ -32,7 +32,7 @@ function SkeletonCard() {
 const HEADLINE_WORDS = ['What', 'are', 'you', 'craving', 'today?'];
 const SUB = 'Order your favourites in seconds — hot, fresh, and ready for pickup';
 
-function HeroSection() {
+function HeroSection({ isOpen }: { isOpen: boolean }) {
   const [visibleWords, setVisibleWords] = useState(0);
   const [subVisible, setSubVisible] = useState(false);
   const [pillsVisible, setPillsVisible] = useState(false);
@@ -118,7 +118,7 @@ function HeroSection() {
             transform: pillsVisible ? 'translateY(0)' : 'translateY(12px)',
             transition: 'opacity 0.4s ease, transform 0.4s ease',
           }}>
-            {[{ icon: '🍽️', label: '24+ Items' }, { icon: '⚡', label: 'Ready Fast' }, { icon: '🟢', label: 'Open Now' }].map(({ icon, label }) => (
+            {[{ icon: '🍽️', label: '24+ Items' }, { icon: '⚡', label: 'Ready Fast' }, { icon: isOpen ? '🟢' : '🔴', label: isOpen ? 'Open Now' : 'Closed' }].map(({ icon, label }) => (
               <div key={label} style={{
                 display: 'inline-flex', alignItems: 'center', gap: 5,
                 background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)',
@@ -206,6 +206,12 @@ export default function MenuPage() {
 
   const [slowLoad, setSlowLoad] = useState(false);
 
+  const { data: status } = useQuery({
+    queryKey: ['settings-status'],
+    queryFn: settingsApi.getStatus,
+    staleTime: 60000,
+  });
+
   const { data: menuItems = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['menu'],
     queryFn: menuApi.getAll,
@@ -239,7 +245,7 @@ export default function MenuPage() {
       <header className="sticky top-0 z-30" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(12px)' }}>
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🍽️</span>
+            <img src="/logo.png" alt="OrderFlow" className="w-8 h-8 rounded-lg object-contain" />
             <span className="text-xl font-black tracking-tight" style={{ color: 'var(--text)' }}>OrderFlow</span>
           </div>
           <div className="flex items-center gap-2">
@@ -262,7 +268,7 @@ export default function MenuPage() {
       </header>
 
       {/* Hero */}
-      <HeroSection />
+      <HeroSection isOpen={status?.isOpen ?? true} />
 
       {/* Category Filter */}
       <div className="sticky top-[61px] z-20 py-3" style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>

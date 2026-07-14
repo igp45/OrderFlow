@@ -117,6 +117,16 @@ export default function AdminPage() {
 
   // Settings state
   const [bankForm, setBankForm] = useState<PaymentDetails>({ bankName: '', accountName: '', accountNumber: '' });
+  const { data: restaurantStatus, refetch: refetchStatus } = useQuery({
+    queryKey: ['settings-status'],
+    queryFn: settingsApi.getStatus,
+    enabled: activeTab === 'settings',
+  });
+  const { mutate: toggleOpen, isPending: togglingOpen } = useMutation({
+    mutationFn: (isOpen: boolean) => settingsApi.setStatus(isOpen),
+    onSuccess: () => { refetchStatus(); queryClient.invalidateQueries({ queryKey: ['settings-status'] }); },
+    onError: () => toast.error('Failed to update status'),
+  });
   const [bankLoaded, setBankLoaded] = useState(false);
   const [pwRole, setPwRole] = useState<'admin' | 'kitchen'>('admin');
   const [newPassword, setNewPassword] = useState('');
@@ -585,6 +595,29 @@ export default function AdminPage() {
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <div className="max-w-2xl mx-auto space-y-6">
+
+            {/* Restaurant Open/Closed toggle */}
+            <div className="card p-5 flex items-center justify-between gap-4">
+              <div>
+                <h2 className="font-bold text-lg" style={{ color: 'var(--text)' }}>
+                  {restaurantStatus?.isOpen ? '🟢 Restaurant is Open' : '🔴 Restaurant is Closed'}
+                </h2>
+                <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
+                  Customers see this status on the menu page.
+                </p>
+              </div>
+              <button
+                onClick={() => toggleOpen(!(restaurantStatus?.isOpen ?? true))}
+                disabled={togglingOpen}
+                className="flex-shrink-0 px-5 py-2.5 rounded-xl font-bold text-sm transition-all"
+                style={restaurantStatus?.isOpen
+                  ? { background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1.5px solid rgba(239,68,68,0.25)' }
+                  : { background: 'rgba(16,185,129,0.1)', color: '#10B981', border: '1.5px solid rgba(16,185,129,0.25)' }
+                }
+              >
+                {togglingOpen ? '…' : restaurantStatus?.isOpen ? 'Mark Closed' : 'Mark Open'}
+              </button>
+            </div>
 
             {/* Bank Details */}
             <div className="card p-6 space-y-4">

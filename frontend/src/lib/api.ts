@@ -57,4 +57,7 @@ export const settingsApi = {
     api.patch<PaymentDetails>('/settings/payment', data).then(r => r.data),
   changePassword: (role: 'admin' | 'kitchen', newPassword: string) =>
     api.patch('/settings/passwords', { role, newPassword }).then(r => r.data),
+  getStatus: () => api.get<{ isOpen: boolean }>('/settings/status').then(r => r.data),
+  setStatus: (isOpen: boolean) =>
+    api.patch<{ isOpen: boolean }>('/settings/status', { isOpen }).then(r => r.data),
 };

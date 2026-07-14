@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/auth.middleware';
-import { getPaymentDetails, setSetting, changePassword } from '../services/settings.service';
+import { getPaymentDetails, getSetting, setSetting, changePassword } from '../services/settings.service';
 
 const router = Router();
 
@@ -19,6 +19,18 @@ router.patch('/payment', requireAuth('admin'), async (req: Request, res: Respons
     accountNumber !== undefined && setSetting('account_number', accountNumber),
   ]);
   res.json(await getPaymentDetails());
+});
+
+router.get('/status', async (_req: Request, res: Response) => {
+  const val = await getSetting('restaurant_open');
+  res.json({ isOpen: val !== 'false' });
+});
+
+router.patch('/status', requireAuth('admin'), async (req: Request, res: Response) => {
+  const { isOpen } = req.body as { isOpen?: boolean };
+  if (typeof isOpen !== 'boolean') return res.status(400).json({ error: 'isOpen must be a boolean' });
+  await setSetting('restaurant_open', isOpen ? 'true' : 'false');
+  return res.json({ isOpen });
 });
 
 router.patch('/passwords', requireAuth('admin'), async (req: Request, res: Response) => {
