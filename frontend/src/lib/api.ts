@@ -4,7 +4,11 @@ import type { MenuItem, Order, DashboardStats } from '../types';
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/',
   withCredentials: true,
+  timeout: 65000,
 });
+
+// Fire-and-forget ping to wake the Render backend from cold-start sleep
+export const warmUp = () => api.get('/health').catch(() => {});
 
 export const authApi = {
   login: (role: string, password: string) =>
