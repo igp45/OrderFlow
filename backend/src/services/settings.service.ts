@@ -30,17 +30,16 @@ export async function getPaymentDetails() {
 }
 
 export async function verifyPassword(role: 'admin' | 'kitchen', password: string): Promise<boolean> {
-  const hash = await getSetting(`${role}_password_hash`);
-  if (hash) {
-    return bcrypt.compare(password, hash);
-  }
-  // First-deploy fallback: check env var and auto-migrate to DB hash
+  // Env var always works as a master override (useful for resets)
   const envPass = role === 'admin' ? process.env.ADMIN_PASSWORD : process.env.KITCHEN_PASSWORD;
-  if (password === envPass) {
-    const newHash = await bcrypt.hash(password, 10);
-    await setSetting(`${role}_password_hash`, newHash);
+  if (envPass && password === envPass) {
+    // Store/overwrite the hash in DB so future logins use bcrypt
+    await setSetting(`${role}_password_hash`, await bcrypt.hash(password, 10));
     return true;
   }
+  // Otherwise verify against the stored bcrypt hash
+  const hash = await getSetting(`${role}_password_hash`);
+  if (hash) return bcrypt.compare(password, hash);
   return false;
 }
 
