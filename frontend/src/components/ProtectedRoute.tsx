@@ -21,26 +21,29 @@ export default function ProtectedRoute({ allowedRoles, children }: Props) {
   const location = useLocation();
   const sessionRole = getSessionRole();
 
-  // Background network check — validates the cookie is still alive.
-  // We don't block rendering on this; sessionStorage provides the fast path.
-  const { data, isLoading, isError } = useQuery({
+  // Only hit the network when there is NO session (e.g. direct URL visit, fresh browser).
+  // After login, sessionRole is always set so this query is disabled entirely —
+  // meaning a slow/failing backend can never redirect the user back to login.
+  const { data, isLoading } = useQuery({
     queryKey: ['auth'],
     queryFn: authApi.me,
     retry: 1,
     retryDelay: 3000,
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
+    enabled: !sessionRole,
   });
 
-  const role = data?.role ?? sessionRole;
-
-  // If the network confirmed the session is invalid, clear and redirect
-  if (isError && !isLoading) {
-    clearSessionRole();
+  // ── Fast path ── session says who you are; render immediately, zero network ──
+  if (sessionRole) {
+    if (allowedRoles.includes(sessionRole as 'admin' | 'kitchen')) {
+      return <>{children}</>;
+    }
+    // Kitchen staff trying to hit /admin (or vice versa)
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  // No session at all and still loading — show spinner
-  if (!sessionRole && isLoading) {
+  // ── Slow path ── no session, waiting for the cookie-based check ──
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
         <div className="w-10 h-10 border-4 rounded-full animate-spin"
@@ -49,7 +52,7 @@ export default function ProtectedRoute({ allowedRoles, children }: Props) {
     );
   }
 
-  if (!role || !allowedRoles.includes(role as 'admin' | 'kitchen')) {
+  if (!data || !allowedRoles.includes(data.role as 'admin' | 'kitchen')) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
