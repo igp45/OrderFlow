@@ -8,6 +8,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import { dashboardApi, aiApi, menuApi, ordersApi, authApi, settingsApi, warmUp } from '../lib/api';
 import type { PaymentDetails } from '../lib/api';
+import { clearSessionRole } from '../components/ProtectedRoute';
 import socket from '../lib/socket';
 import DarkModeToggle from '../components/DarkModeToggle';
 import type { Order, MenuItem, OrderStatus } from '../types';
@@ -66,6 +67,7 @@ export default function AdminPage() {
   const { mutate: logout } = useMutation({
     mutationFn: authApi.logout,
     onSuccess: () => {
+      clearSessionRole();
       queryClient.clear();
       navigate('/login', { replace: true });
     },

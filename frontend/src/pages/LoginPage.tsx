@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { authApi } from '../lib/api';
+import { setSessionRole } from '../components/ProtectedRoute';
 import DarkModeToggle from '../components/DarkModeToggle';
 
 const ROLES = [
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const { mutate: login, isPending, error } = useMutation({
     mutationFn: () => authApi.login(selectedRole!, password),
     onSuccess: (data) => {
+      setSessionRole(data.role);           // fast-path for ProtectedRoute
       queryClient.setQueryData(['auth'], data);
       toast.success('Welcome back!');
       if (from) return navigate(from, { replace: true });
