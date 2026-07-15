@@ -7,6 +7,18 @@ import socket from '../lib/socket';
 import DarkModeToggle from '../components/DarkModeToggle';
 import type { Order, OrderStatus } from '../types';
 
+function fallbackCopy(text: string) {
+  const el = document.createElement('textarea');
+  el.value = text;
+  el.style.position = 'fixed';
+  el.style.opacity = '0';
+  document.body.appendChild(el);
+  el.focus();
+  el.select();
+  try { document.execCommand('copy'); } catch { /* ignore */ }
+  document.body.removeChild(el);
+}
+
 const STEPS: OrderStatus[] = ['PENDING', 'PREPARING', 'READY', 'COMPLETED'];
 
 const STEP_META: Record<OrderStatus, { label: string; icon: string; desc: string; color: string }> = {
@@ -231,7 +243,15 @@ export default function OrderTrackerPage() {
                   <span
                     className="font-black text-base cursor-pointer select-all"
                     style={{ color: '#10B981' }}
-                    onClick={() => { navigator.clipboard?.writeText(payment.accountNumber); toast.success('Account number copied!'); }}
+                    onClick={() => {
+                      const text = payment.accountNumber;
+                      if (navigator.clipboard?.writeText) {
+                        navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+                      } else {
+                        fallbackCopy(text);
+                      }
+                      toast.success('Account number copied!');
+                    }}
                   >
                     {payment.accountNumber}
                   </span>

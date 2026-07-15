@@ -24,7 +24,9 @@ const NEXT_STATUS: Record<ActiveStatus, OrderStatus> = {
 
 function playAlert() {
   try {
-    const ctx = new AudioContext();
+    // webkitAudioContext for older Safari
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new AC();
     [880, 1100, 880].forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
